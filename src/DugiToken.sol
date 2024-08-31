@@ -39,10 +39,19 @@ contract DugiToken is ERC20, Ownable {
     bool burnStarted ;
     bool burnStoped;
     bool burnEnded;
+    bool public chairtyTeamTokenLockedForNextRelease;
 
-      uint256 public lastBurnTimestamp;
+    uint256 public lastBurnTimestamp;
 
     address public tokenBurnAdmin  = 0x3793f758a36c04B51a520a59520e4d845f94F9F2 ;
+
+
+    uint256 public initialLockingPeriod = 24 * 30 days; // 24 months
+    uint256 public vestingPeriod = 3 * 30 days; // 3 months
+    uint256 public vestingSlots = 8; // 8 slots
+    uint256 public tokensPerSlot;
+    uint256 public vestingShouldStartTimestamp;
+    uint256 public releasedSlots;
 
   
     constructor(
@@ -60,13 +69,14 @@ contract DugiToken is ERC20, Ownable {
 
         _mint(donationAddress, donationReserve); 
         _mint(liquidityPairingAddress, liquidityPairingReserve); 
-        _mint(charityTeamAddress, charityTeamReserve); 
+        _mint(address(this), charityTeamReserve); 
         _mint(sushiwarpAddress,sushiwarpReserve); 
         _mint(uniswapAddress, uniswapReserve); 
         _mint(address(this), burnReserve); 
 
         
         lastBurnTimestamp = block.timestamp;
+        vestingShouldStartTimestamp = block.timestamp + initialLockingPeriod;
     }
 
 
@@ -79,6 +89,14 @@ contract DugiToken is ERC20, Ownable {
      modifier canBurn() {
         require(balanceOf(address(this)) > 0, "Burn reserve is empty");
         require(block.timestamp >= lastBurnTimestamp + 30 days, "30 days have not passed since last burn");
+        _;
+    }
+
+
+        modifier canRelease() {
+        require(block.timestamp >= vestingShouldStartTimestamp, "Initial locking period not over");
+        require(releasedSlots < vestingSlots, "All slots have been released");
+        require(chairtyTeamTokenLockedForNextRelease == false, "Tokens locked for next release");
         _;
     }
 
@@ -103,11 +121,19 @@ contract DugiToken is ERC20, Ownable {
     }
 
 
-    
+      function releaseTokens() external onlyOwner canRelease {
+        uint256 slotsToRelease = (block.timestamp - vestingShouldStartTimestamp) / vestingPeriod;
+        uint256 slotsToReleaseNow = slotsToRelease - releasedSlots;
+        uint256 amountToRelease = tokensPerSlot * slotsToReleaseNow;
 
+        // 12.5% of  charityTeamReserve
 
- 
+        uint256 amountToRelease = (charityTeamReserve * 125) / 1000;
 
+        _transfer(address(this), charityTeamAddress, amountToRelease);
+        releasedSlots += slotsToReleaseNow;
+        chairtyTeamTokenLockedForNextRelease = true;
+    }
 
 
 

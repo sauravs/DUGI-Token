@@ -78,57 +78,45 @@ contract DugiTokenTest is Test {
     }
 
 
-    //     function testOnlyOwnerCanBurnTokens() public {
-    //     // Simulate the passage of 30 days to meet the canBurn modifier condition
-    //     vm.warp(block.timestamp + 30 days);
+        function testOnlyOwnerCanBurnTokens() public {
+        // Simulate the passage of 30 days to meet the canBurn modifier condition
+        vm.warp(block.timestamp + 30 days);
 
-    //     // Ensure the burn reserve is not empty
-    //     assert(dugiToken.balanceOf(address(dugiToken)) > 0);
+        // Ensure the burn reserve is not empty
+        assert(dugiToken.balanceOf(address(dugiToken)) > 0);
 
-    //     // Attempt to burn tokens from a non-owner address
-    //     address nonOwner = address(0x7);
-    //     vm.prank(nonOwner);
-    //     vm.expectRevert("Ownable: caller is not the owner");
-    //     dugiToken.burnTokens();
-    // }
+        // Attempt to burn tokens from a non-owner address
+        address nonOwner = address(0x7);
+        vm.prank(nonOwner);
+        vm.expectRevert("Only tokenBurnAdmin can call this function");
+        dugiToken.burnTokens();
+    }
 
-    // function testBurnTokensMultipleTimes() public {
-    //     uint256 initialBurnReserve = dugiToken.balanceOf(address(dugiToken));
-    //     uint256 burnAmount = (initialBurnReserve * 714) / 1_000_000;
+    function testBurnTokensMultipleTimes() public {
 
-    //     for (uint256 i = 0; i < 12; i++) {
-    //         // Simulate the passage of 30 days
-    //         vm.warp(block.timestamp + 30 days);
+        // as per calculation it should iterate for 420 times/420 months to burn all the tokens from burnReserve 
+       
+        uint256 initialBurnReserve = dugiToken.balanceOf(address(dugiToken));
+        uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
 
-    //         dugiToken.burnTokens();
+        for (uint256 i = 0; i < 420; i++) {
+            // Simulate the passage of 30 days
+            vm.warp(block.timestamp + 30 days);
+            
+            vm.prank(tokenBurnAdmin);
 
-    //         uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken));
-    //         assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
-    //     }
-    // }
+            dugiToken.burnTokens();
+
+            uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken));
+            assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
+        }
+
+         
+
+   
+    }
 
 
-    // function testOnlyOwnerCanBurnTokens() public {
-    //     address nonOwner = address(0x7);
-    //     vm.prank(nonOwner);
-    //     vm.expectRevert("Ownable: caller is not the owner");
-    //     dugiToken.burnTokens();
-    // }
-
-    // function testBurnTokensMultipleTimes() public {
-    //     uint256 initialBurnReserve = dugiToken.balanceOf(address(dugiToken));
-    //     uint256 burnAmount = (initialBurnReserve * 714) / 1_000_000;
-
-    //     for (uint256 i = 0; i < 12; i++) {
-    //         // Simulate the passage of 30 days
-    //         vm.warp(block.timestamp + 30 days);
-
-    //         dugiToken.burnTokens();
-
-    //         uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken));
-    //         assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
-    //     }
-    // }
 
     // function testUpdateTokenBurnAdmin() public {
     //     address newAdmin = address(0x8);
