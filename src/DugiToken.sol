@@ -31,6 +31,9 @@ contract DugiToken is ERC20, Ownable {
     uint256 burnCounter ;   // for every month it should get increased by 1 ,should increase upto 420 for 35 years
 
 
+   uint256 public chairityTeamLockedReserve ;
+   uint256 public burnLockedReserve ;
+
     // uint256 public burnRate = 714; // 0.0714% monthly
 
     // uint256 public lastBurnTimestamp;
@@ -39,6 +42,7 @@ contract DugiToken is ERC20, Ownable {
     bool burnStarted ;
     bool burnStoped;
     bool burnEnded;
+    bool public chairtyTeamTokenInitiallyLocked;
     bool public chairtyTeamTokenLockedForNextRelease;
 
     uint256 public lastBurnTimestamp;
@@ -49,9 +53,10 @@ contract DugiToken is ERC20, Ownable {
     uint256 public initialLockingPeriod = 24 * 30 days; // 24 months
     uint256 public vestingPeriod = 3 * 30 days; // 3 months
     uint256 public vestingSlots = 8; // 8 slots
+    uint256 public releasedSlots;
     uint256 public tokensPerSlot;
     uint256 public vestingShouldStartTimestamp;
-    uint256 public releasedSlots;
+    uint256 public vestingSlotTimestamp;
 
   
     constructor(
@@ -60,12 +65,14 @@ contract DugiToken is ERC20, Ownable {
         address _charityTeamAddress,
         address _sushiwarpAddress,
         address _uniswapAddress
-    ) ERC20("DUGI Token", "DUGI") Ownable(msg.sender) {
+    ) ERC20("DUGI Token", "DUGI") Ownable(0x7cC26960D2A47c659A8DBeCEb0937148b0026fD6) {
         donationAddress = _donationAddress;
         liquidityPairingAddress = _liquidityPairingAddress;
         charityTeamAddress = _charityTeamAddress;
         sushiwarpAddress = _sushiwarpAddress;
         uniswapAddress = _uniswapAddress;
+        chairtyTeamTokenInitiallyLocked = true;
+        chairtyTeamTokenLockedForNextRelease = true;
 
         _mint(donationAddress, donationReserve); 
         _mint(liquidityPairingAddress, liquidityPairingReserve); 
@@ -74,9 +81,11 @@ contract DugiToken is ERC20, Ownable {
         _mint(uniswapAddress, uniswapReserve); 
         _mint(address(this), burnReserve); 
 
-        
+        chairityTeamLockedReserve = charityTeamReserve ;
+        burnLockedReserve = burnReserve ;
         lastBurnTimestamp = block.timestamp;
         vestingShouldStartTimestamp = block.timestamp + initialLockingPeriod;
+        vestingSlotTimestamp = vestingShouldStartTimestamp + vestingPeriod;
     }
 
 
@@ -87,16 +96,30 @@ contract DugiToken is ERC20, Ownable {
     }
 
      modifier canBurn() {
-        require(balanceOf(address(this)) > 0, "Burn reserve is empty");
+        require(burnLockedReserve > 0, "Burn reserve is empty");
         require(block.timestamp >= lastBurnTimestamp + 30 days, "30 days have not passed since last burn");
         _;
     }
 
 
-        modifier canRelease() {
+       modifier unlockChairtyTeamToken() {
+
+
+        require(chairityTeamLockedReserve > 0, "All charityTeamReserve tokens have been released");
+
+        require(chairtyTeamTokenInitiallyLocked == true, "Tokens already unlocked");
+       
         require(block.timestamp >= vestingShouldStartTimestamp, "Initial locking period not over");
+
+            _;
+    }
+
+
+        modifier releaseChairtyTeamTokenForNextSlot() {
+       
         require(releasedSlots < vestingSlots, "All slots have been released");
-        require(chairtyTeamTokenLockedForNextRelease == false, "Tokens locked for next release");
+        require(block.timestamp >= vestingSlotTimestamp, "Vesting period not over");
+        require(chairtyTeamTokenLockedForNextRelease == true, "Tokens locked for next release");
         _;
     }
 
@@ -116,23 +139,30 @@ contract DugiToken is ERC20, Ownable {
 
         uint256 burnAmount = (TOTAL_SUPPLY * 714) / 1_000_000;
         _burn(address(this), burnAmount);
+
+        burnLockedReserve -= burnAmount;
        
         burnCounter++;
     }
 
+   
 
-      function releaseTokens() external onlyOwner canRelease {
-        uint256 slotsToRelease = (block.timestamp - vestingShouldStartTimestamp) / vestingPeriod;
-        uint256 slotsToReleaseNow = slotsToRelease - releasedSlots;
-        uint256 amountToRelease = tokensPerSlot * slotsToReleaseNow;
+
+      function releaseTokens() external onlyOwner unlockChairtyTeamToken releaseChairtyTeamTokenForNextSlot  {
+        
+     
 
         // 12.5% of  charityTeamReserve
 
         uint256 amountToRelease = (charityTeamReserve * 125) / 1000;
 
         _transfer(address(this), charityTeamAddress, amountToRelease);
-        releasedSlots += slotsToReleaseNow;
-        chairtyTeamTokenLockedForNextRelease = true;
+
+        chairityTeamLockedReserve -= amountToRelease;
+        releasedSlots += releasedSlots;
+        chairtyTeamTokenInitiallyLocked = false;
+        chairtyTeamTokenLockedForNextRelease = false;
+
     }
 
 

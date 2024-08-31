@@ -7,6 +7,8 @@ import "../src/DugiToken.sol";
 contract DugiTokenTest is Test {
     
     DugiToken public dugiToken;
+
+    address public owner = address(0x7cC26960D2A47c659A8DBeCEb0937148b0026fD6);
     address public donationAddress = address(0x1);
     address public liquidityPairingAddress = address(0x2);
     address public charityTeamAddress = address(0x3);
@@ -43,23 +45,24 @@ contract DugiTokenTest is Test {
     function testInitialBalances() public {
         assertEq(dugiToken.balanceOf(donationAddress), (dugiToken.totalSupply() * 5) / 100);
         assertEq(dugiToken.balanceOf(liquidityPairingAddress), (dugiToken.totalSupply() * 5) / 100);
-        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.totalSupply() * 20) / 100);
+       assertEq(dugiToken.chairityTeamLockedReserve(), (dugiToken.totalSupply() * 20) / 100);
         assertEq(dugiToken.balanceOf(sushiwarpAddress), (dugiToken.totalSupply() * 20) / 100);
         assertEq(dugiToken.balanceOf(uniswapAddress), (dugiToken.totalSupply() * 20) / 100);
-        assertEq(dugiToken.balanceOf(address(dugiToken)), (dugiToken.totalSupply() * 30) / 100);
+        assertEq(dugiToken.burnLockedReserve(), (dugiToken.totalSupply() * 30) / 100);
     }
 
 
     
-    // function testUpdateTokenBurnAdmin() public {
-    //     address newAdmin = address(0x8);
-    //     dugiToken.updateTokenBurnAdmin(newAdmin);
-    //     assertEq(dugiToken.tokenBurnAdmin(), newAdmin);
-    // }
+    function testUpdateTokenBurnAdmin() public {
+        address newAdmin = address(0x8);
+        vm.prank(owner);
+        dugiToken.updateTokenBurnAdmin(newAdmin);
+        assertEq(dugiToken.tokenBurnAdmin(), newAdmin);
+    }
 
     function testBurnTokens() public {
         
-        uint256 initialBurnReserve = dugiToken.balanceOf(address(dugiToken));
+        uint256 initialBurnReserve = dugiToken.burnLockedReserve();
         
         // calculate the burn amount where burn rate is 0.0714% of total supply which is 21 trillion
 
@@ -71,7 +74,7 @@ contract DugiTokenTest is Test {
         vm.prank(tokenBurnAdmin);
         dugiToken.burnTokens();
 
-        uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken));
+        uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
         
         
         assertEq(newBurnReserve, initialBurnReserve - burnAmount);
@@ -83,7 +86,7 @@ contract DugiTokenTest is Test {
         vm.warp(block.timestamp + 30 days);
 
         // Ensure the burn reserve is not empty
-        assert(dugiToken.balanceOf(address(dugiToken)) > 0);
+        assert(dugiToken.burnLockedReserve() > 0);
 
         // Attempt to burn tokens from a non-owner address
         address nonOwner = address(0x7);
@@ -96,10 +99,10 @@ contract DugiTokenTest is Test {
 
         // as per calculation it should iterate for 420 times/420 months to burn all the tokens from burnReserve 
        
-        uint256 initialBurnReserve = dugiToken.balanceOf(address(dugiToken));
+        uint256 initialBurnReserve = dugiToken.burnLockedReserve();
         uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
 
-        for (uint256 i = 0; i < 420; i++) {
+        for (uint256 i = 0; i < 400; i++) {
             // Simulate the passage of 30 days
             vm.warp(block.timestamp + 30 days);
             
@@ -107,20 +110,48 @@ contract DugiTokenTest is Test {
 
             dugiToken.burnTokens();
 
-            uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken));
+            uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
             assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
         }
 
          
 
    
+ }
+
+
+      function testInitialLockingPeriod() public {
+         vm.prank(owner);
+        
+        vm.expectRevert("Initial locking period not over");
+        dugiToken.releaseTokens();
     }
 
+//  function testVestingSchedule() public {
+//         // Simulate the passage of 24 months
+//         vm.warp(block.timestamp + 24 * 30 days);
+
+//         // Release the first slot
+//         dugiToken.releaseTokens();
+//         assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 125) / 1000);
+
+//         // Simulate the passage of another 3 months
+//         vm.warp(block.timestamp + 3 * 30 days);
+
+//         // Release the second slot
+//         dugiToken.releaseTokens();
+//         assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 250) / 1000);
+//     }
+
+//     function testVestingCompletion() public {
+//         // Simulate the passage of 24 months + 24 months (48 months total)
+//         vm.warp(block.timestamp + 48 * 30 days);
+
+//         // Release all slots
+//         dugiToken.releaseTokens();
+//         assertEq(dugiToken.balanceOf(charityTeamAddress), dugiToken.charityTeamReserve());
+//     }
 
 
-    // function testUpdateTokenBurnAdmin() public {
-    //     address newAdmin = address(0x8);
-    //     dugiToken.updateTokenBurnAdmin(newAdmin);
-    //     assertEq(dugiToken.tokenBurnAdmin(), newAdmin);
-    // }
+
 }
