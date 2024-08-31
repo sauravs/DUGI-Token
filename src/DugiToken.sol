@@ -70,6 +70,12 @@ contract DugiToken is ERC20, Ownable {
     }
 
 
+    // modifer for only tokenBurnAdmin  
+    modifier onlyTokenBurnAdmin() {
+        require(msg.sender == tokenBurnAdmin, "Only tokenBurnAdmin can call this function");
+        _;
+    }
+
      modifier canBurn() {
         require(balanceOf(address(this)) > 0, "Burn reserve is empty");
         require(block.timestamp >= lastBurnTimestamp + 30 days, "30 days have not passed since last burn");
@@ -88,9 +94,9 @@ contract DugiToken is ERC20, Ownable {
     // function for initiate  token burning at  rate of 0.0714% of totalsupply after every 30 days till burnReserve is 0 by the owner , the tokens should be burnt from burnReserve till burn Reserve is 0
 
 
-    function burnTokens() public onlyOwner canBurn {
+    function burnTokens() public onlyTokenBurnAdmin canBurn {
 
-        uint256 burnAmount = (balanceOf(address(this)) * 714) / 1_000_000;
+        uint256 burnAmount = (TOTAL_SUPPLY * 714) / 1_000_000;
         _burn(address(this), burnAmount);
        
         burnCounter++;
