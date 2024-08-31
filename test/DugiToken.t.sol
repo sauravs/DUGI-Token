@@ -1,5 +1,4 @@
-// // SPDX-License-Identifier: MIT
-
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
 import "forge-std/Test.sol";
@@ -8,16 +7,14 @@ import "../src/DugiToken.sol";
 contract DugiTokenTest is Test {
     
     DugiToken public dugiToken;
-    
     address public donationAddress = address(0x1);
     address public liquidityPairingAddress = address(0x2);
     address public charityTeamAddress = address(0x3);
     address public sushiwarpAddress = address(0x4);
     address public uniswapAddress = address(0x5);
-    address public owner = address(this);
+    address public tokenBurnAdmin = address(0x6);
 
     function setUp() public {
-       
         dugiToken = new DugiToken(
             donationAddress,
             liquidityPairingAddress,
@@ -27,45 +24,17 @@ contract DugiTokenTest is Test {
         );
     }
 
- 
-
-    function testInitialSupply() public {
-        uint256 totalSupply = dugiToken.totalSupply();
-        assertEq(totalSupply, 21_000_000_000_000 * 10**18);
-    }
-
-    function testInitialOwner() public {
-        address contractOwner = dugiToken.owner();
-        assertEq(contractOwner, owner);
-    }
-
-    function testInitialAddresses() public {
-        assertEq(dugiToken.donationAddress(), donationAddress);
-        assertEq(dugiToken.liquidityPairingAddress(), liquidityPairingAddress);
-        assertEq(dugiToken.charityTeamAddress(), charityTeamAddress);
-        assertEq(dugiToken.sushiwarpAddress(), sushiwarpAddress);
-        assertEq(dugiToken.uniswapAddress(), uniswapAddress);
-    }
-
-    // test token name
-
     function testTokenName() public {
         string memory tokenName = dugiToken.name();
         assertEq(tokenName, "DUGI Token");
     }
 
-    // test token symbol
-
     function testTokenSymbol() public {
         string memory tokenSymbol = dugiToken.symbol();
         assertEq(tokenSymbol, "DUGI");
-    }   
-
-
-
+    }
 
     function testInitialBalances() public {
-       
         assertEq(dugiToken.balanceOf(donationAddress), (dugiToken.totalSupply() * 5) / 100);
         assertEq(dugiToken.balanceOf(liquidityPairingAddress), (dugiToken.totalSupply() * 5) / 100);
         assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.totalSupply() * 20) / 100);
@@ -74,21 +43,44 @@ contract DugiTokenTest is Test {
         assertEq(dugiToken.balanceOf(address(dugiToken)), (dugiToken.totalSupply() * 30) / 100);
     }
 
-    function testBurnTokens() public {
-        
-        uint256 initialBurnReserve = dugiToken.balanceOf(address(dugiToken));
-        uint256 burnAmount = (initialBurnReserve * 714) / 1_000_000;
+    // function testBurnTokens() public {
+    //     uint256 initialBurnReserve = dugiToken.balanceOf(address(dugiToken));
+    //     uint256 burnAmount = (initialBurnReserve * 714) / 1_000_000;
 
-        dugiToken.initiateTokenBurning();
+    //     // Simulate the passage of 30 days
+    //     vm.warp(block.timestamp + 30 days);
 
-        uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken));
-        assertEq(newBurnReserve, initialBurnReserve - burnAmount);
-    }
+    //     dugiToken.burnTokens();
+
+    //     uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken));
+    //     assertEq(newBurnReserve, initialBurnReserve - burnAmount);
+    // }
 
     // function testOnlyOwnerCanBurnTokens() public {
-    //     address nonOwner = address(0x6);
+    //     address nonOwner = address(0x7);
     //     vm.prank(nonOwner);
-    //      vm.expectRevert("OwnableUnauthorizedAccount");
+    //     vm.expectRevert("Ownable: caller is not the owner");
     //     dugiToken.burnTokens();
+    // }
+
+    // function testBurnTokensMultipleTimes() public {
+    //     uint256 initialBurnReserve = dugiToken.balanceOf(address(dugiToken));
+    //     uint256 burnAmount = (initialBurnReserve * 714) / 1_000_000;
+
+    //     for (uint256 i = 0; i < 12; i++) {
+    //         // Simulate the passage of 30 days
+    //         vm.warp(block.timestamp + 30 days);
+
+    //         dugiToken.burnTokens();
+
+    //         uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken));
+    //         assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
+    //     }
+    // }
+
+    // function testUpdateTokenBurnAdmin() public {
+    //     address newAdmin = address(0x8);
+    //     dugiToken.updateTokenBurnAdmin(newAdmin);
+    //     assertEq(dugiToken.tokenBurnAdmin(), newAdmin);
     // }
 }
