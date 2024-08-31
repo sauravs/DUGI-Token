@@ -107,7 +107,7 @@ contract DugiToken is ERC20, Ownable {
 
         require(chairityTeamLockedReserve > 0, "All charityTeamReserve tokens have been released");
 
-        require(chairtyTeamTokenInitiallyLocked == true, "Tokens already unlocked");
+       // require(chairtyTeamTokenInitiallyLocked == true, "Tokens already unlocked");
        
         require(block.timestamp >= vestingShouldStartTimestamp, "Initial locking period not over");
 
@@ -119,7 +119,7 @@ contract DugiToken is ERC20, Ownable {
        
         require(releasedSlots < vestingSlots, "All slots have been released");
         require(block.timestamp >= vestingSlotTimestamp, "Vesting period not over");
-        require(chairtyTeamTokenLockedForNextRelease == true, "Tokens locked for next release");
+        //require(chairtyTeamTokenLockedForNextRelease == true, "Tokens locked for next release");
         _;
     }
 

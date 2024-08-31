@@ -16,6 +16,10 @@ contract DugiTokenTest is Test {
     address public uniswapAddress = address(0x5);
     address public tokenBurnAdmin = address(0x3793f758a36c04B51a520a59520e4d845f94F9F2);
 
+    address public userA = address(0x6);
+    address public userB = address(0x7);
+    address public newOwner = address(0x8); 
+
     function setUp() public {
         dugiToken = new DugiToken(
             donationAddress,
@@ -114,11 +118,7 @@ contract DugiTokenTest is Test {
             assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
         }
 
-         
-
-   
  }
-
 
       function testInitialLockingPeriod() public {
          vm.prank(owner);
@@ -127,31 +127,146 @@ contract DugiTokenTest is Test {
         dugiToken.releaseTokens();
     }
 
-//  function testVestingSchedule() public {
-//         // Simulate the passage of 24 months
-//         vm.warp(block.timestamp + 24 * 30 days);
+      function testVestingSchedule() public {
+        // Simulate the passage of 24 months
+        vm.warp(block.timestamp + 24 * 30 days + 3*30 days);
 
-//         // Release the first slot
-//         dugiToken.releaseTokens();
-//         assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 125) / 1000);
+        
 
-//         // Simulate the passage of another 3 months
-//         vm.warp(block.timestamp + 3 * 30 days);
+        // Release the first slot
+        vm.prank(owner);
+        dugiToken.releaseTokens();
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 125) / 1000);
 
-//         // Release the second slot
-//         dugiToken.releaseTokens();
-//         assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 250) / 1000);
-//     }
+        // Simulate the passage of another 3 months
+        vm.warp(block.timestamp + 3 * 30 days);
 
-//     function testVestingCompletion() public {
-//         // Simulate the passage of 24 months + 24 months (48 months total)
-//         vm.warp(block.timestamp + 48 * 30 days);
+        // Release the second slot
+        vm.prank(owner);
+        dugiToken.releaseTokens();
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 250) / 1000);
 
-//         // Release all slots
-//         dugiToken.releaseTokens();
-//         assertEq(dugiToken.balanceOf(charityTeamAddress), dugiToken.charityTeamReserve());
-//     }
+        // Simulate the passage of another 3 months
+
+        vm.warp(block.timestamp + 3 * 30 days);
+
+        // Release the third slot
+        vm.prank(owner);
+        dugiToken.releaseTokens();
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 375) / 1000);
 
 
+        // Simulate the passage of another 3 months
+
+        vm.warp(block.timestamp + 3 * 30 days);
+
+        // Release the fourth slot
+        vm.prank(owner);
+        dugiToken.releaseTokens();
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 500) / 1000);
+
+        // Simulate the passage of another 3 months
+
+        vm.warp(block.timestamp + 3 * 30 days);
+
+        // Release the fifth slot
+
+        vm.prank(owner);
+        dugiToken.releaseTokens();
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 625) / 1000);
+
+
+        // Simulate the passage of another 3 months
+
+        vm.warp(block.timestamp + 3 * 30 days);
+
+        // Release the sixth slot
+
+        vm.prank(owner);
+        dugiToken.releaseTokens();
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 750) / 1000);
+
+
+        // Simulate the passage of another 3 months
+
+        vm.warp(block.timestamp + 3 * 30 days);
+
+        // Release the seventh slot
+
+        vm.prank(owner);
+        dugiToken.releaseTokens();
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 875) / 1000);
+
+
+        // Simulate the passage of another 3 months
+
+        vm.warp(block.timestamp + 3 * 30 days);
+
+        // Release the eighth slot
+
+        vm.prank(owner);
+        dugiToken.releaseTokens();
+        assertEq(dugiToken.balanceOf(charityTeamAddress), dugiToken.charityTeamReserve());
+
+        // assert that token contract balance is chairtyTeamReserve 
+
+        //assertEq(dugiToken.balanceOf(address(dugiToken)), dugiToken.charityTeamReserve());
+
+
+
+    }
+
+    // function testVestingCompletion() public {
+    //     // Simulate the passage of 24 months + 24 months (48 months total)
+    //     vm.warp(block.timestamp + 48 * 30 days);
+
+    //     // Release all slots
+    //     vm.prank(owner);
+    //     dugiToken.releaseTokens();
+    //     assertEq(dugiToken.balanceOf(charityTeamAddress), dugiToken.charityTeamReserve());
+    // }
+
+
+
+
+    function testTransfer() public {
+        uint256 amount = 1000 * 10**18;
+
+        vm.prank(donationAddress);
+        dugiToken.transfer(userA, amount);
+        assertEq(dugiToken.balanceOf(userA), amount);
+    }
+
+    function testTransferFrom() public {
+        uint256 amount = 1000 * 10**18;
+        
+        vm.prank(donationAddress);
+        dugiToken.approve(userB, amount);
+
+
+        vm.prank(userB);
+        dugiToken.transferFrom(donationAddress, userA, amount);
+        assertEq(dugiToken.balanceOf(userA), amount);
+    }
+
+   
+   function testOwnership() public {
+        assertEq(dugiToken.owner(), owner);
+    }   
+
+    function testTransferOwnership() public {
+
+        vm.prank(owner);
+        dugiToken.transferOwnership(newOwner);
+        assertEq(dugiToken.owner(), newOwner);
+    }
+
+    function testRenounceOwnership() public {
+        vm.prank(owner);
+        dugiToken.renounceOwnership();
+        assertEq(dugiToken.owner(), address(0));
+    }
+
+ 
 
 }
