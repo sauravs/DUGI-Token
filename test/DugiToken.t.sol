@@ -97,156 +97,297 @@ contract DugiTokenTest is Test {
         assertEq(dugiToken.tokenBurnAdmin(), newAdmin);
     }
 
-    // function testBurnTokens() public {
-    //     uint256 initialBurnReserve = dugiToken.burnLockedReserve();
+     function testOnlyOwnerCanBurnTokens() public {
+        // Simulate the passage of 30 days to meet the canBurn modifier condition
+        vm.warp(block.timestamp + 30 days);
 
-    //     // calculate the burn amount where burn rate is 0.0714% of total supply which is 21 trillion
+        // Ensure the burn reserve is not empty
+        assert(dugiToken.burnLockedReserve() > 0);
 
-    //     uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
+        // Attempt to burn tokens from a non-owner address
+        address nonOwner = address(0x7);
+        vm.prank(nonOwner);
+        vm.expectRevert("Only tokenBurnAdmin allowed");
+        dugiToken.burnTokens();
+    }
 
-    //     // Simulate the passage of 30 days
-    //     vm.warp(block.timestamp + 30 days);
+    
+    function testBurnTokens() public {
+        uint256 initialBurnReserve = dugiToken.burnLockedReserve();
 
-    //     vm.prank(tokenBurnAdmin);
-    //     dugiToken.burnTokens();
+        // calculate the burn amount where burn rate is 0.0714% of total supply which is 21 trillion
 
-    //     uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
+        uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
 
-    //     assertEq(newBurnReserve, initialBurnReserve - burnAmount);
+        // Simulate the passage of 30 days
+        vm.warp(block.timestamp + 30 days);
 
-    //     // assert that burnCounter is increased by 1
-    //     assertEq(dugiToken.burnCounter(), 1);
-    // }
+        vm.prank(tokenBurnAdmin);
+        dugiToken.burnTokens();
 
-    // function testOnlyOwnerCanBurnTokens() public {
+        uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
+
+        assertEq(newBurnReserve, initialBurnReserve - burnAmount);
+
+        // assert that burnCounter is increased by 1
+        assertEq(dugiToken.burnCounter(), 1);
+        assertEq(dugiToken.burnStarted(), true);
+        assertEq(dugiToken.burnEnded(), false);
+    }
+
+
+    
+      function testBurnTokensMultipleTimes() public {
+        // as per calculation it should iterate for 420 times/420 months to burn all the tokens from burnReserve
+
+        uint256 initialBurnReserve = dugiToken.burnLockedReserve();
+        uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
+
+        for (uint256 i = 0; i < 420; i++) {
+            // Simulate the passage of 30 days
+            vm.warp(block.timestamp + 30 days);
+
+            vm.prank(tokenBurnAdmin);
+
+            dugiToken.burnTokens();
+
+            uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
+            assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
+            assertEq(dugiToken.burnCounter(), i + 1);
+            assertEq(dugiToken.burnStarted(), true);
+        }     
+
+        // assert that burnCounter is equal to totalburnSlot
+
+        assertEq(dugiToken.burnCounter(), dugiToken.totalburnSlot());
+        assertEq(dugiToken.burnEnded(), true);
+       // console.log(dugiToken.burnLockedReserve()); // 2520000000    000 000 000 000 000 000
+    }
+
+
+
+
+    
+    // function testTokenBurnFailIfburnLockedReserveEmpty() public {
     //     // Simulate the passage of 30 days to meet the canBurn modifier condition
     //     vm.warp(block.timestamp + 30 days);
 
-    //     // Ensure the burn reserve is not empty
-    //     assert(dugiToken.burnLockedReserve() > 0);
+    //     // Ensure the burn reserve is empty
+    //     uint256 currentBurnReserve = dugiToken.burnLockedReserve();
+    //     currentBurnReserve = 0;
 
-    //     // Attempt to burn tokens from a non-owner address
-    //     address nonOwner = address(0x7);
-    //     vm.prank(nonOwner);
-    //     vm.expectRevert("Only tokenBurnAdmin can call this function");
+    //     // Attempt to burn tokens
+    //     vm.prank(tokenBurnAdmin);
+    //     vm.expectRevert("Burn reserve is empty");
     //     dugiToken.burnTokens();
     // }
 
-    // function testBurnTokensMultipleTimes() public {
-    //     // as per calculation it should iterate for 420 times/420 months to burn all the tokens from burnReserve
 
-    //     uint256 initialBurnReserve = dugiToken.burnLockedReserve();
-    //     uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
+  
 
-    //     for (uint256 i = 0; i < 400; i++) {
-    //         // Simulate the passage of 30 days
-    //         vm.warp(block.timestamp + 30 days);
+    function testInitialLockingPeriod() public {
+        vm.prank(owner);
+        vm.expectRevert("Initial locking period not over yet");
+        dugiToken.releaseTokens();
+    }
 
-    //         vm.prank(tokenBurnAdmin);
+     
+     function testReleaseTokens() public {
 
-    //         dugiToken.burnTokens();
+        uint256 initialLockingPeriod = dugiToken.initialLockingPeriod();
+       
+        uint256 vestingTimeSlot = dugiToken.vestingPeriod();
 
-    //         uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
-    //         assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
-    //     }
-    // }
+        vm.warp(block.timestamp + initialLockingPeriod + vestingTimeSlot);
+        vm.prank(owner);
+        dugiToken.releaseTokens();
+        assertEq(dugiToken.currentReleasedSlot(), 1);
 
-    // function testInitialLockingPeriod() public {
-    //     vm.prank(owner);
+        // assert that charityTeamAddress receives 12.5% of charityTeamReserve
 
-    //     vm.expectRevert("Initial locking period not over");
-    //     dugiToken.releaseTokens();
-    // }
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 125) / 1000);
 
-    // function testVestingSchedule() public {
-    //     // Simulate the passage of 24 months
-    //     vm.warp(block.timestamp + 24 * 30 days + 3 * 30 days);
+        // assert that chairityTeamLockedReserve is updated to 87.5% of charityTeamReserve
 
-    //     // Release the first slot
-    //     vm.prank(owner);
-    //     dugiToken.releaseTokens();
-    //     assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 125) / 1000);
+        assertEq(dugiToken.chairityTeamLockedReserve(), (dugiToken.charityTeamReserve() * 875) / 1000);
 
-    //     // Simulate the passage of another 3 months
-    //     vm.warp(block.timestamp + 3 * 30 days);
+        // assert that currentVestingSlotTimestamp is updated to current block.timestamp
 
-    //     // Release the second slot
-    //     vm.prank(owner);
-    //     dugiToken.releaseTokens();
-    //     assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 250) / 1000);
+        assertEq(dugiToken.currentVestingSlotTimestamp(), block.timestamp);
 
-    //     // Simulate the passage of another 3 months
+        // assert that currentReleasedSlot is updated to 1
 
-    //     vm.warp(block.timestamp + 3 * 30 days);
+        assertEq(dugiToken.currentReleasedSlot(), 1);
 
-    //     // Release the third slot
-    //     vm.prank(owner);
-    //     dugiToken.releaseTokens();
-    //     assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 375) / 1000);
+        // test for next release
 
-    //     // Simulate the passage of another 3 months
+        vm.warp(block.timestamp + vestingTimeSlot);
+        vm.prank(owner);
+        dugiToken.releaseTokens();
 
-    //     vm.warp(block.timestamp + 3 * 30 days);
+        // assert that charityTeamAddress receives another 12.5% (total of 25%) of charityTeamReserve
 
-    //     // Release the fourth slot
-    //     vm.prank(owner);
-    //     dugiToken.releaseTokens();
-    //     assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 500) / 1000);
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 250) / 1000);
 
-    //     // Simulate the passage of another 3 months
+        // assert that chairityTeamLockedReserve is updated to 75% of charityTeamReserve
 
-    //     vm.warp(block.timestamp + 3 * 30 days);
+        assertEq(dugiToken.chairityTeamLockedReserve(), (dugiToken.charityTeamReserve() * 750) / 1000);
 
-    //     // Release the fifth slot
+        // assert that currentVestingSlotTimestamp is updated to current block.timestamp
 
-    //     vm.prank(owner);
-    //     dugiToken.releaseTokens();
-    //     assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 625) / 1000);
+        assertEq(dugiToken.currentVestingSlotTimestamp(), block.timestamp);
 
-    //     // Simulate the passage of another 3 months
+        // assert that currentReleasedSlot is updated to 2
 
-    //     vm.warp(block.timestamp + 3 * 30 days);
+        assertEq(dugiToken.currentReleasedSlot(), 2);
 
-    //     // Release the sixth slot
+        // test for next release
 
-    //     vm.prank(owner);
-    //     dugiToken.releaseTokens();
-    //     assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 750) / 1000);
+        vm.warp(block.timestamp + vestingTimeSlot);
+        vm.prank(owner);
+        dugiToken.releaseTokens();
 
-    //     // Simulate the passage of another 3 months
+        // assert that charityTeamAddress receives another 12.5% (total of 37.5%) of charityTeamReserve
 
-    //     vm.warp(block.timestamp + 3 * 30 days);
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 375) / 1000);
 
-    //     // Release the seventh slot
+        // assert that chairityTeamLockedReserve is updated to 62.5% of charityTeamReserve
 
-    //     vm.prank(owner);
-    //     dugiToken.releaseTokens();
-    //     assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 875) / 1000);
+        assertEq(dugiToken.chairityTeamLockedReserve(), (dugiToken.charityTeamReserve() * 625) / 1000);
 
-    //     // Simulate the passage of another 3 months
+        // assert that currentVestingSlotTimestamp is updated to current block.timestamp
 
-    //     vm.warp(block.timestamp + 3 * 30 days);
+        assertEq(dugiToken.currentVestingSlotTimestamp(), block.timestamp);
 
-    //     // Release the eighth slot
+        // assert that currentReleasedSlot is updated to 3
 
-    //     vm.prank(owner);
-    //     dugiToken.releaseTokens();
-    //     assertEq(dugiToken.balanceOf(charityTeamAddress), dugiToken.charityTeamReserve());
+        assertEq(dugiToken.currentReleasedSlot(), 3);
+        
+        // test for next release
 
-    //     // assert that token contract balance is chairtyTeamReserve
+        vm.warp(block.timestamp + vestingTimeSlot);
+        vm.prank(owner);
+        dugiToken.releaseTokens();
 
-    //     //assertEq(dugiToken.balanceOf(address(dugiToken)), dugiToken.charityTeamReserve());
-    // }
+        // assert that charityTeamAddress receives another 12.5% (total of 50%) of charityTeamReserve
+        
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 500) / 1000);
 
-    // function testVestingCompletion() public {
-    //     // Simulate the passage of 24 months + 24 months (48 months total)
-    //     vm.warp(block.timestamp + 48 * 30 days);
+        // assert that chairityTeamLockedReserve is updated to 50% of charityTeamReserve
 
-    //     // Release all slots
-    //     vm.prank(owner);
-    //     dugiToken.releaseTokens();
-    //     assertEq(dugiToken.balanceOf(charityTeamAddress), dugiToken.charityTeamReserve());
-    // }
+        assertEq(dugiToken.chairityTeamLockedReserve(), (dugiToken.charityTeamReserve() * 500) / 1000);
+
+        // assert that currentVestingSlotTimestamp is updated to current block.timestamp
+
+        assertEq(dugiToken.currentVestingSlotTimestamp(), block.timestamp);
+
+        // assert that currentReleasedSlot is updated to 4
+
+        assertEq(dugiToken.currentReleasedSlot(), 4);
+
+        // test for next release
+
+        vm.warp(block.timestamp + vestingTimeSlot);
+
+        vm.prank(owner);
+
+        dugiToken.releaseTokens();
+
+        // assert that charityTeamAddress receives another 12.5% (total of 62.5%) of charityTeamReserve
+
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 625) / 1000);
+
+        // assert that chairityTeamLockedReserve is updated to 37.5% of charityTeamReserve
+
+        assertEq(dugiToken.chairityTeamLockedReserve(), (dugiToken.charityTeamReserve() * 375) / 1000);
+
+        // assert that currentVestingSlotTimestamp is updated to current block.timestamp
+
+        assertEq(dugiToken.currentVestingSlotTimestamp(), block.timestamp);
+
+        // assert that currentReleasedSlot is updated to 5
+
+        assertEq(dugiToken.currentReleasedSlot(), 5);
+
+        // test for next release
+
+        vm.warp(block.timestamp + vestingTimeSlot);
+
+        vm.prank(owner);
+
+        dugiToken.releaseTokens();
+
+        // assert that charityTeamAddress receives another 12.5% (total of 75%) of charityTeamReserve
+
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 750) / 1000);
+
+        // assert that chairityTeamLockedReserve is updated to 25% of charityTeamReserve
+
+        assertEq(dugiToken.chairityTeamLockedReserve(), (dugiToken.charityTeamReserve() * 250) / 1000);
+
+        // assert that currentVestingSlotTimestamp is updated to current block.timestamp
+
+        assertEq(dugiToken.currentVestingSlotTimestamp(), block.timestamp);
+
+        // assert that currentReleasedSlot is updated to 6
+
+        assertEq(dugiToken.currentReleasedSlot(), 6);
+
+        // test for next release
+
+        vm.warp(block.timestamp + vestingTimeSlot);
+
+        vm.prank(owner);
+        
+        dugiToken.releaseTokens();
+
+        // assert that charityTeamAddress receives another 12.5% (total of 87.5%) of charityTeamReserve
+
+        assertEq(dugiToken.balanceOf(charityTeamAddress), (dugiToken.charityTeamReserve() * 875) / 1000);
+
+        // assert that chairityTeamLockedReserve is updated to 12.5% of charityTeamReserve
+
+        assertEq(dugiToken.chairityTeamLockedReserve(), (dugiToken.charityTeamReserve() * 125) / 1000);
+
+        // assert that currentVestingSlotTimestamp is updated to current block.timestamp
+
+        assertEq(dugiToken.currentVestingSlotTimestamp(), block.timestamp);
+
+        // assert that currentReleasedSlot is updated to 7
+
+        assertEq(dugiToken.currentReleasedSlot(), 7);
+
+        // test for next release
+
+        vm.warp(block.timestamp + vestingTimeSlot);
+
+        vm.prank(owner);
+
+        dugiToken.releaseTokens();
+
+        // assert that charityTeamAddress receives another 12.5% (total of 100%) of charityTeamReserve
+
+        assertEq(dugiToken.balanceOf(charityTeamAddress), dugiToken.charityTeamReserve());
+
+        // assert that chairityTeamLockedReserve is updated to 0
+
+        assertEq(dugiToken.chairityTeamLockedReserve(), 0);
+
+        // assert that currentVestingSlotTimestamp is updated to current block.timestamp
+
+        assertEq(dugiToken.currentVestingSlotTimestamp(), block.timestamp);
+
+        // assert that currentReleasedSlot is updated to 8
+
+        assertEq(dugiToken.currentReleasedSlot(), 8);
+    
+        // assert that currentReleasedSlot is equal to totalVestingSlots
+
+        assertEq(dugiToken.currentReleasedSlot(), dugiToken.totalVestingSlots());
+
+
+
+    }
 
     
 }

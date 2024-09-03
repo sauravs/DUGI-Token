@@ -94,7 +94,7 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
 
     /// @notice Modifier to restrict access to only the token burn admin
     modifier onlyTokenBurnAdmin() {
-        require(msg.sender == tokenBurnAdmin, "Only tokenBurnAdmin can call this function");
+        require(msg.sender == tokenBurnAdmin, "Only tokenBurnAdmin allowed");
         _;
     }
 
