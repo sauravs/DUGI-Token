@@ -77,6 +77,9 @@ contract DugiTokenTest is Test {
         uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
 
         assertEq(newBurnReserve, initialBurnReserve - burnAmount);
+
+        // assert that burnCounter is increased by 1
+        assertEq(dugiToken.burnCounter(), 1);
     }
 
     function testOnlyOwnerCanBurnTokens() public {

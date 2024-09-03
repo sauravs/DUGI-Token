@@ -27,20 +27,17 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
     uint256 public uniswapReserve = (TOTAL_SUPPLY * 20) / 100;  /// @notice 20% of total supply reserved for uniswap
     uint256 public burnReserve = (TOTAL_SUPPLY * 30) / 100;  /// @notice 30% of total supply reserved for burning
     
-    uint256 burnCounter;  /// @notice Counter for the number of burns performed, every month it should get increased by 1
+    uint256 public burnCounter;  /// @notice Counter for the number of burns performed, every month it should get increased by 1
     
 
     uint256 public chairityTeamLockedReserve;   /// @notice Locked reserve for charity team
     uint256 public burnLockedReserve;     /// @notice Locked reserve for  token burning
 
-    // uint256 public burnRate = 714; // 0.0714% monthly
 
-    // uint256 public lastBurnTimestamp;
-
-    uint256 public burnSlot = 24;   /// @notice Number of months for each burn slot (24 months)
-    bool burnStarted;               /// @notice Indicates if burning has started
-    bool burnStoped;                /// @notice Indicates if burning has stopped
-    bool burnEnded;                 /// @notice Indicates if burning has ended
+    uint256 public totalburnSlot = 8;   /// @notice Number of slots/rounds for token burning
+    bool public burnStarted;               /// @notice Indicates if burning has started
+    bool public burnEnded;                 /// @notice Indicates if burning has ended
+    
     bool public chairtyTeamTokenInitiallyLocked;        /// @notice Indicates if charity team tokens are initially locked
     bool public chairtyTeamTokenLockedForNextRelease;    /// @notice Indicates if charity team tokens are locked for the next release
 
@@ -51,12 +48,12 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
     uint256 public initialLockingPeriod = 24 * 30 days;     /// @notice Initial locking period for charity team tokens (24 months)
 
     uint256 public vestingPeriod = 3 * 30 days;  /// @notice Vesting period for charity team tokens (3 months)
-    uint256 public vestingSlots = 8;   /// @notice Number of vesting slots for charity team tokens (8 slots)
-    uint256 public releasedSlots;          /// @notice Number of released slots for charity team tokens
+    uint256 public totalVestingSlots = 8;   /// @notice Number of vesting slots for charity team tokens (8 slots)
+    uint256 public currentReleasedSlot;          /// @notice Number of released slots for charity team tokens
     uint256 public tokensPerSlot;              /// @notice Number of tokens per vesting slot
     uint256 public vestingShouldStartTimestamp;  /// @notice Timestamp when vesting should start
     uint256 public vestingSlotTimestamp;          /// @notice Timestamp for the next vesting slot
-
+    uint256 public currentVestingSlotTimestamp ;  /// @notice Timestamp for the current vesting slot
 
     /// @notice Constructor to initialize the DugiToken contract
     /// @param _donationAddress Address for donation reserve
@@ -91,7 +88,7 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
         burnLockedReserve = burnReserve;
         lastBurnTimestamp = block.timestamp;
         vestingShouldStartTimestamp = block.timestamp + initialLockingPeriod;
-        vestingSlotTimestamp = vestingShouldStartTimestamp + vestingPeriod;
+        currentVestingSlotTimestamp = vestingShouldStartTimestamp;
     }
 
     /// @notice Modifier to restrict access to only the token burn admin
@@ -103,32 +100,22 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
         /// @notice Modifier to check if tokens can be burned
 
     modifier canBurn() {
-        require(burnLockedReserve > 0, "Burn reserve is empty");
+        require(burnLockedReserve >= 0, "Burn reserve is empty");
+        require( burnCounter <= totalburnSlot, "All slots have been burned");
         require(block.timestamp >= lastBurnTimestamp + 30 days, "30 days have not passed since last burn");
         _;
     }
 
-    /// @notice Modifier to unlock charity team tokens after the initial locking period
+    /// @notice Modifier to unlock charity/team token reserve after the initial locking period over
 
     modifier unlockChairtyTeamToken() {
-        require(chairityTeamLockedReserve > 0, "All charityTeamReserve tokens have been released");
-
-        // require(chairtyTeamTokenInitiallyLocked == true, "Tokens already unlocked");
-
-        require(block.timestamp >= vestingShouldStartTimestamp, "Initial locking period not over");
+    
+        require(block.timestamp >= vestingShouldStartTimestamp, "Initial locking period not over yet");
 
         _;
     }
 
-        /// @notice Modifier to release charity team tokens for the next slot
-
-
-    modifier releaseChairtyTeamTokenForNextSlot() {
-        require(releasedSlots < vestingSlots, "All slots have been released");
-        require(block.timestamp >= vestingSlotTimestamp, "Vesting period not over");
-        //require(chairtyTeamTokenLockedForNextRelease == true, "Tokens locked for next release");
-        _;
-    }
+    
 
     /// @notice Function to update the token burn admin
     /// @param _tokenBurnAdmin New address of the token burn admin
@@ -140,26 +127,40 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
      /// @notice Function to burn tokens at a rate of 0.0714% of total supply every 30 days until the burn reserve is empty
 
     function burnTokens() public onlyTokenBurnAdmin canBurn {
-        uint256 burnAmount = (TOTAL_SUPPLY * 714) / 1_000_000;
-        _burn(address(this), burnAmount);
+    uint256 burnAmount = (TOTAL_SUPPLY * 714) / 1_000_000;   
+    _burn(address(this), burnAmount); 
 
-        burnLockedReserve -= burnAmount;
+    burnLockedReserve -= burnAmount;
+    burnCounter++;
+    lastBurnTimestamp = block.timestamp;
 
-        burnCounter++;
+    if (burnCounter == 1) {
+        burnStarted = true;
+    } else if (burnCounter == totalburnSlot) {
+        burnEnded = true;
     }
+}
 
-        /// @notice Function to release charity/team tokens after the initial locking period of 24 months over in total of 8 slots every 3 months of 12.5% of charityTeamReserve
+        /// @notice Function to release charity/team tokens after the initial locking period of 24 months over in total of 8 slots . Every 3 months , 12.5% of charityTeamReserve will be released and transferred to charityTeamAddress
 
-    function releaseTokens() external onlyOwner unlockChairtyTeamToken releaseChairtyTeamTokenForNextSlot {
-        // 12.5% of  charityTeamReserve
+    function releaseTokens() external onlyOwner unlockChairtyTeamToken {
 
-        uint256 amountToRelease = (charityTeamReserve * 125) / 1000;
+        require(chairityTeamLockedReserve >= 0, "Charity team reserve is empty");
+        require(currentReleasedSlot <= totalVestingSlots, "All slots have been released");
+        require(block.timestamp >= currentVestingSlotTimestamp + vestingPeriod ,"current Vesting slot not over yet for next release");
 
+         currentVestingSlotTimestamp = block.timestamp ;
+        
+       
+        uint256 amountToRelease = (charityTeamReserve * 125) / 1000;     // 12.5% of  charityTeamReserve
         _transfer(address(this), charityTeamAddress, amountToRelease);
 
         chairityTeamLockedReserve -= amountToRelease;
-        releasedSlots += releasedSlots;
-        chairtyTeamTokenInitiallyLocked = false;
-        chairtyTeamTokenLockedForNextRelease = false;
+        currentReleasedSlot += 1;
+
+        if (chairtyTeamTokenInitiallyLocked == true) {
+            chairtyTeamTokenInitiallyLocked = false;
+        }
+        //chairtyTeamTokenLockedForNextRelease = false;
     }
 }
