@@ -1,49 +1,43 @@
 ## Foundry
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+**DugiToken - ERC20 Token with specific token burning reserve and in built token vesting mechanism for charity/team reserve**
 
-Foundry consists of:
+Important Details about this token:
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+-   **Total Maximum Supply**:  21 Trillion
+-   **Token Name**: Dugi Token
+-   **Token Symbol**: DUGI
+-   **Token Decimals**: 18
+-   **Burning Mechanism**: YES
+-   **Vesting Mechanism**: YES
 
-## Documentation
 
-https://book.getfoundry.sh/
+## Burning Details
 
-## Usage
+- Every 30 days approximately 0.0714% of total token supply (15 billion token per month) will be auto burn from BurnToken Reserve for next 35 years till BurnToken reserve reaches to zero or near zero
 
-### Build
+
+
+
+## Vesting Details
+
+- **Chairity/ Team Allocation Fund** : 20% of Total Maximum Supply (21 Trillion)
+- **Initial Locking Period** : 24 Months (Time for which token is locked)
+- **Token Releasing Slots**: 8 (Total Number of rounds in which tokens will be released to Team/Charity Wallet)
+- **Token Slot Amount** : 12.5% of (Chairity/ Team Allocation Fund)
+-  **Slot Period** : 3 Months (Every vesting round needs to be cooling period of 3 months)
+
+
+
+### To run Tests
 
 ```shell
+$ clone the repo
+$ install foundry
 $ forge build
-```
-
-### Test
-
-```shell
 $ forge test
 ```
 
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
 
 ### Deploy
 
@@ -51,16 +45,3 @@ $ anvil
 $ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
 ```
 
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```

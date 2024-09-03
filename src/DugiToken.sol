@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
-/// @title DugiToken - ERC20 Token with specific token burning reserve and in build token vesting mechanism for charity/team reserve
-/// @notice This contract implements an ERC20 token with specific reserves for donation, liquidity pairing, charity, sushiwarp, and uniswap. It also includes mechanisms for token burning and vesting.
+/// @title DugiToken - ERC20 Token with specific token burning reserve and in built token vesting mechanism for charity/team reserve
+/// @notice This contract implements an ERC20 token with specific reserves for donation, liquidity pairing, charity/tem, sushiwarp, and uniswap. It also includes mechanisms for token burning and vesting for team reserve.
 
 contract DugiToken is ERC20, Ownable ,ERC20Burnable {
     
@@ -157,7 +157,7 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
        
         chairityTeamLockedReserve -= amountToRelease;
         currentReleasedSlot += 1;
-        
+
         _transfer(address(this), charityTeamAddress, amountToRelease);
 
 
