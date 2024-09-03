@@ -1,4 +1,4 @@
-## Foundry
+## DugiToken : An ERC20 Compliant Token
 
 **DugiToken - ERC20 Token with specific token burning reserve and in built token vesting mechanism for charity/team reserve**
 
