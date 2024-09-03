@@ -1,64 +1,70 @@
-
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
-contract DugiToken is ERC20, Ownable {
+/// @title DugiToken - ERC20 Token with specific reserves and locking mechanisms
+/// @notice This contract implements an ERC20 token with specific reserves for donation, liquidity pairing, charity, sushiwarp, and uniswap. It also includes mechanisms for token burning and vesting.
+
+contract DugiToken is ERC20, Ownable ,ERC20Burnable {
     
-    uint256 private constant TOTAL_SUPPLY = 21_000_000_000_000 * 10**18; // 21 trillion tokens with 18 decimals
-
-    address public donationAddress;
-    address public liquidityPairingAddress;
-    address public charityTeamAddress;
-    address public sushiwarpAddress;
-    address public uniswapAddress;
-
-
-    uint256 public donationReserve = (TOTAL_SUPPLY * 5) / 100; // 5% for Donation
-
-    uint256 public liquidityPairingReserve = (TOTAL_SUPPLY * 5) / 100; // 5% for Pairing Liquidity
-
-    uint256 public charityTeamReserve = (TOTAL_SUPPLY * 20) / 100; // 20% for Charity/Team
-
-    uint256 public sushiwarpReserve = (TOTAL_SUPPLY * 20) / 100; // 20% for Sushiwarp
-
-    uint256 public uniswapReserve = (TOTAL_SUPPLY * 20) / 100; // 20% for Uniswap
-
-    uint256 public burnReserve = (TOTAL_SUPPLY * 30) / 100; // 30% for Burn Reserve
+    uint256 private constant TOTAL_SUPPLY = 21_000_000_000_000 * 10 ** 18; //// @notice Total supply of the token (21 trillion with 18 decimals)
+  
+    
+    address public donationAddress;               /// @notice Address for donation reserve
+    address public liquidityPairingAddress;       /// @notice Address for liquidity pairing reserve
+    address public charityTeamAddress;           /// @notice Address for charity team reserve
+    address public sushiwarpAddress;             /// @notice Address for sushiwarp reserve
+    address public uniswapAddress;               /// @notice Address for uniswap reserve
    
-    uint256 burnCounter ;   // for every month it should get increased by 1 ,should increase upto 420 for 35 years
 
+    uint256 public donationReserve = (TOTAL_SUPPLY * 5) / 100; /// @notice 5% of total supply reserved for donation
+    uint256 public liquidityPairingReserve = (TOTAL_SUPPLY * 5) / 100;  /// @notice 5% of total supply reserved for liquidity pairing
+    uint256 public charityTeamReserve = (TOTAL_SUPPLY * 20) / 100; /// @notice 20% of total supply reserved for charity/team
+    uint256 public sushiwarpReserve = (TOTAL_SUPPLY * 20) / 100;    /// @notice 20% of total supply reserved for sushiwarp
+    uint256 public uniswapReserve = (TOTAL_SUPPLY * 20) / 100;  /// @notice 20% of total supply reserved for uniswap
+    uint256 public burnReserve = (TOTAL_SUPPLY * 30) / 100;  /// @notice 30% of total supply reserved for burning
+    
+    uint256 burnCounter;  /// @notice Counter for the number of burns performed, every month it should get increased by 1
+    
 
-   uint256 public chairityTeamLockedReserve ;
-   uint256 public burnLockedReserve ;
+    uint256 public chairityTeamLockedReserve;   /// @notice Locked reserve for charity team
+    uint256 public burnLockedReserve;     /// @notice Locked reserve for  token burning
 
     // uint256 public burnRate = 714; // 0.0714% monthly
 
     // uint256 public lastBurnTimestamp;
 
-    uint256 public burnSlot = 24;  // for two years one month one slot
-    bool burnStarted ;
-    bool burnStoped;
-    bool burnEnded;
-    bool public chairtyTeamTokenInitiallyLocked;
-    bool public chairtyTeamTokenLockedForNextRelease;
+    uint256 public burnSlot = 24;   /// @notice Number of months for each burn slot (24 months)
+    bool burnStarted;               /// @notice Indicates if burning has started
+    bool burnStoped;                /// @notice Indicates if burning has stopped
+    bool burnEnded;                 /// @notice Indicates if burning has ended
+    bool public chairtyTeamTokenInitiallyLocked;        /// @notice Indicates if charity team tokens are initially locked
+    bool public chairtyTeamTokenLockedForNextRelease;    /// @notice Indicates if charity team tokens are locked for the next release
 
-    uint256 public lastBurnTimestamp;
+    uint256 public lastBurnTimestamp;                     /// @notice Timestamp of the last burn
 
-    address public tokenBurnAdmin  = 0x3793f758a36c04B51a520a59520e4d845f94F9F2 ;
+    address public tokenBurnAdmin = 0x3793f758a36c04B51a520a59520e4d845f94F9F2;     /// @notice Address of the token burn admin
+
+    uint256 public initialLockingPeriod = 24 * 30 days;     /// @notice Initial locking period for charity team tokens (24 months)
+
+    uint256 public vestingPeriod = 3 * 30 days;  /// @notice Vesting period for charity team tokens (3 months)
+    uint256 public vestingSlots = 8;   /// @notice Number of vesting slots for charity team tokens (8 slots)
+    uint256 public releasedSlots;          /// @notice Number of released slots for charity team tokens
+    uint256 public tokensPerSlot;              /// @notice Number of tokens per vesting slot
+    uint256 public vestingShouldStartTimestamp;  /// @notice Timestamp when vesting should start
+    uint256 public vestingSlotTimestamp;          /// @notice Timestamp for the next vesting slot
 
 
-    uint256 public initialLockingPeriod = 24 * 30 days; // 24 months
-    uint256 public vestingPeriod = 3 * 30 days; // 3 months
-    uint256 public vestingSlots = 8; // 8 slots
-    uint256 public releasedSlots;
-    uint256 public tokensPerSlot;
-    uint256 public vestingShouldStartTimestamp;
-    uint256 public vestingSlotTimestamp;
+    /// @notice Constructor to initialize the DugiToken contract
+    /// @param _donationAddress Address for donation reserve
+    /// @param _liquidityPairingAddress Address for liquidity pairing reserve
+    /// @param _charityTeamAddress Address for charity team reserve
+    /// @param _sushiwarpAddress Address for sushiwarp reserve
+    /// @param _uniswapAddress Address for uniswap reserve
 
-  
     constructor(
         address _donationAddress,
         address _liquidityPairingAddress,
@@ -74,84 +80,77 @@ contract DugiToken is ERC20, Ownable {
         chairtyTeamTokenInitiallyLocked = true;
         chairtyTeamTokenLockedForNextRelease = true;
 
-        _mint(donationAddress, donationReserve); 
-        _mint(liquidityPairingAddress, liquidityPairingReserve); 
-        _mint(address(this), charityTeamReserve); 
-        _mint(sushiwarpAddress,sushiwarpReserve); 
-        _mint(uniswapAddress, uniswapReserve); 
-        _mint(address(this), burnReserve); 
+        _mint(donationAddress, donationReserve);
+        _mint(liquidityPairingAddress, liquidityPairingReserve);
+        _mint(address(this), charityTeamReserve);
+        _mint(sushiwarpAddress, sushiwarpReserve);
+        _mint(uniswapAddress, uniswapReserve);
+        _mint(address(this), burnReserve);
 
-        chairityTeamLockedReserve = charityTeamReserve ;
-        burnLockedReserve = burnReserve ;
+        chairityTeamLockedReserve = charityTeamReserve;
+        burnLockedReserve = burnReserve;
         lastBurnTimestamp = block.timestamp;
         vestingShouldStartTimestamp = block.timestamp + initialLockingPeriod;
         vestingSlotTimestamp = vestingShouldStartTimestamp + vestingPeriod;
     }
 
-
-    // modifer for only tokenBurnAdmin  
+    /// @notice Modifier to restrict access to only the token burn admin
     modifier onlyTokenBurnAdmin() {
         require(msg.sender == tokenBurnAdmin, "Only tokenBurnAdmin can call this function");
         _;
     }
 
-     modifier canBurn() {
+        /// @notice Modifier to check if tokens can be burned
+
+    modifier canBurn() {
         require(burnLockedReserve > 0, "Burn reserve is empty");
         require(block.timestamp >= lastBurnTimestamp + 30 days, "30 days have not passed since last burn");
         _;
     }
 
+    /// @notice Modifier to unlock charity team tokens after the initial locking period
 
-       modifier unlockChairtyTeamToken() {
-
-
+    modifier unlockChairtyTeamToken() {
         require(chairityTeamLockedReserve > 0, "All charityTeamReserve tokens have been released");
 
-       // require(chairtyTeamTokenInitiallyLocked == true, "Tokens already unlocked");
-       
+        // require(chairtyTeamTokenInitiallyLocked == true, "Tokens already unlocked");
+
         require(block.timestamp >= vestingShouldStartTimestamp, "Initial locking period not over");
 
-            _;
+        _;
     }
 
+        /// @notice Modifier to release charity team tokens for the next slot
 
-        modifier releaseChairtyTeamTokenForNextSlot() {
-       
+
+    modifier releaseChairtyTeamTokenForNextSlot() {
         require(releasedSlots < vestingSlots, "All slots have been released");
         require(block.timestamp >= vestingSlotTimestamp, "Vesting period not over");
         //require(chairtyTeamTokenLockedForNextRelease == true, "Tokens locked for next release");
         _;
     }
 
+    /// @notice Function to update the token burn admin
+    /// @param _tokenBurnAdmin New address of the token burn admin
 
     function updateTokenBurnAdmin(address _tokenBurnAdmin) public onlyOwner {
         tokenBurnAdmin = _tokenBurnAdmin;
     }
 
-
-
-
-
-    // function for initiate  token burning at  rate of 0.0714% of totalsupply after every 30 days till burnReserve is 0 by the owner , the tokens should be burnt from burnReserve till burn Reserve is 0
-
+     /// @notice Function to burn tokens at a rate of 0.0714% of total supply every 30 days until the burn reserve is empty
 
     function burnTokens() public onlyTokenBurnAdmin canBurn {
-
         uint256 burnAmount = (TOTAL_SUPPLY * 714) / 1_000_000;
         _burn(address(this), burnAmount);
 
         burnLockedReserve -= burnAmount;
-       
+
         burnCounter++;
     }
 
-   
+        /// @notice Function to release charity/team tokens after the initial locking period of 24 months over in total of 8 slots every 3 months of 12.5% of charityTeamReserve
 
-
-      function releaseTokens() external onlyOwner unlockChairtyTeamToken releaseChairtyTeamTokenForNextSlot  {
-        
-     
-
+    function releaseTokens() external onlyOwner unlockChairtyTeamToken releaseChairtyTeamTokenForNextSlot {
         // 12.5% of  charityTeamReserve
 
         uint256 amountToRelease = (charityTeamReserve * 125) / 1000;
@@ -162,40 +161,5 @@ contract DugiToken is ERC20, Ownable {
         releasedSlots += releasedSlots;
         chairtyTeamTokenInitiallyLocked = false;
         chairtyTeamTokenLockedForNextRelease = false;
-
     }
-
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
