@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
-/// @title DugiToken - ERC20 Token with specific reserves and locking mechanisms
+/// @title DugiToken - ERC20 Token with specific token burning reserve and in build token vesting mechanism for charity/team reserve
 /// @notice This contract implements an ERC20 token with specific reserves for donation, liquidity pairing, charity, sushiwarp, and uniswap. It also includes mechanisms for token burning and vesting.
 
 contract DugiToken is ERC20, Ownable ,ERC20Burnable {
@@ -25,35 +25,33 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
     uint256 public charityTeamReserve = (TOTAL_SUPPLY * 20) / 100; /// @notice 20% of total supply reserved for charity/team
     uint256 public sushiwarpReserve = (TOTAL_SUPPLY * 20) / 100;    /// @notice 20% of total supply reserved for sushiwarp
     uint256 public uniswapReserve = (TOTAL_SUPPLY * 20) / 100;  /// @notice 20% of total supply reserved for uniswap
-    uint256 public burnReserve = (TOTAL_SUPPLY * 30) / 100;  /// @notice 30% of total supply reserved for burning
+    uint256 public burnReserve = (TOTAL_SUPPLY * 30) / 100;  /// @notice 30% of total supply reserved for token burning
     
-    uint256 public burnCounter;  /// @notice Counter for the number of burns performed, every month it should get increased by 1
+    uint256 public burnCounter;  /// @notice Counter to track number of burn cycle performed, every month/burn it should get increased by 1
     
 
-    uint256 public chairityTeamLockedReserve;   /// @notice Locked reserve for charity team
-    uint256 public burnLockedReserve;     /// @notice Locked reserve for  token burning
+    uint256 public chairityTeamLockedReserve;   /// @notice Locked reserve for charity team , helps tracking current charity team reserve
+    uint256 public burnLockedReserve;     /// @notice Locked reserve for  token burning, helps tracking current burn reserve
 
 
-    uint256 public totalburnSlot = 8;   /// @notice Number of slots/rounds for token burning
+    uint256 public totalburnSlot = 420;   /// @notice Total Number of slots/rounds for token burning (Number of months in 35 years)
     bool public burnStarted;               /// @notice Indicates if burning has started
     bool public burnEnded;                 /// @notice Indicates if burning has ended
     
-    bool public chairtyTeamTokenInitiallyLocked;        /// @notice Indicates if charity team tokens are initially locked
-    bool public chairtyTeamTokenLockedForNextRelease;    /// @notice Indicates if charity team tokens are locked for the next release
+    bool public chairtyTeamTokenInitiallyLocked;        /// @notice Indicates if charity team tokens are yet locked initially
 
-    uint256 public lastBurnTimestamp;                     /// @notice Timestamp of the last burn
+    uint256 public lastBurnTimestamp;                     /// @notice Timestamp of the last token burn round
 
     address public tokenBurnAdmin = 0x3793f758a36c04B51a520a59520e4d845f94F9F2;     /// @notice Address of the token burn admin
 
-    uint256 public initialLockingPeriod = 24 * 30 days;     /// @notice Initial locking period for charity team tokens (24 months)
+    uint256 public initialLockingPeriod = 24 * 30 days;     /// @notice Initial locking period for charity team token reserve (24 months)
 
-    uint256 public vestingPeriod = 3 * 30 days;  /// @notice Vesting period for charity team tokens (3 months)
-    uint256 public totalVestingSlots = 8;   /// @notice Number of vesting slots for charity team tokens (8 slots)
-    uint256 public currentReleasedSlot;          /// @notice Number of released slots for charity team tokens
-    uint256 public tokensPerSlot;              /// @notice Number of tokens per vesting slot
-    uint256 public vestingShouldStartTimestamp;  /// @notice Timestamp when vesting should start
-    uint256 public vestingSlotTimestamp;          /// @notice Timestamp for the next vesting slot
-    uint256 public currentVestingSlotTimestamp ;  /// @notice Timestamp for the current vesting slot
+    uint256 public vestingPeriod = 3 * 30 days;  /// @notice Vesting period for charity team tokens (Every 3 months after initial locking period is over)
+    uint256 public totalVestingSlots = 8;   /// @notice Number of vesting slots for charity team tokens (8 slots ,every three months ,will go on for 2 years)
+    
+    uint256 public currentReleasedSlot;          /// @notice Current Slot number for charity team tokens
+    uint256 public vestingShouldStartTimestamp;  /// @notice Timestamp when vesting should start ,after intial locking period is over
+    uint256 public currentVestingSlotTimestamp ;  /// @notice helps keeps Timestamp record  for the upcoming slot
 
     /// @notice Constructor to initialize the DugiToken contract
     /// @param _donationAddress Address for donation reserve
@@ -74,8 +72,7 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
         charityTeamAddress = _charityTeamAddress;
         sushiwarpAddress = _sushiwarpAddress;
         uniswapAddress = _uniswapAddress;
-        chairtyTeamTokenInitiallyLocked = true;
-        chairtyTeamTokenLockedForNextRelease = true;
+      
 
         _mint(donationAddress, donationReserve);
         _mint(liquidityPairingAddress, liquidityPairingReserve);
@@ -86,6 +83,10 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
 
         chairityTeamLockedReserve = charityTeamReserve;
         burnLockedReserve = burnReserve;
+
+        chairtyTeamTokenInitiallyLocked = true;
+
+      
         lastBurnTimestamp = block.timestamp;
         vestingShouldStartTimestamp = block.timestamp + initialLockingPeriod;
         currentVestingSlotTimestamp = vestingShouldStartTimestamp;
@@ -128,10 +129,10 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
 
     function burnTokens() public onlyTokenBurnAdmin canBurn {
     uint256 burnAmount = (TOTAL_SUPPLY * 714) / 1_000_000;   
-    _burn(address(this), burnAmount); 
-
     burnLockedReserve -= burnAmount;
     burnCounter++;
+    _burn(address(this), burnAmount); 
+
     lastBurnTimestamp = block.timestamp;
 
     if (burnCounter == 1) {
@@ -153,14 +154,15 @@ contract DugiToken is ERC20, Ownable ,ERC20Burnable {
         
        
         uint256 amountToRelease = (charityTeamReserve * 125) / 1000;     // 12.5% of  charityTeamReserve
-        _transfer(address(this), charityTeamAddress, amountToRelease);
-
+       
         chairityTeamLockedReserve -= amountToRelease;
         currentReleasedSlot += 1;
+        
+        _transfer(address(this), charityTeamAddress, amountToRelease);
+
 
         if (chairtyTeamTokenInitiallyLocked == true) {
             chairtyTeamTokenInitiallyLocked = false;
         }
-        //chairtyTeamTokenLockedForNextRelease = false;
     }
 }
