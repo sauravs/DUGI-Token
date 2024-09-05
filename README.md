@@ -43,6 +43,10 @@ $ forge test
 
 ```shell
 $ forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_AMOY_RPC_URL
-  forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_AMOY_RPC_URL --broadcast --verify -vvvv
+$ forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_AMOY_RPC_URL --broadcast --verify -vvvv
 ```
 
+  ### To verify deployed contract:
+	   ```shell
+	  $ forge verify-contract <contract_address> <contract_name> --watch
+    ```
