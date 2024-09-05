@@ -7,13 +7,13 @@ import "../src/DugiToken.sol";
 contract DugiTokenTest is Test {
     DugiToken public dugiToken;
 
-    address public owner = address(0x7cC26960D2A47c659A8DBeCEb0937148b0026fD6);
+    address public owner = address(0x3793f758a36c04B51a520a59520e4d845f94F9F2);
     address public donationAddress = address(0x1);
     address public liquidityPairingAddress = address(0x2);
     address public charityTeamAddress = address(0x3);
     address public sushiwarpAddress = address(0x4);
     address public uniswapAddress = address(0x5);
-    address public tokenBurnAdmin = address(0x3793f758a36c04B51a520a59520e4d845f94F9F2);
+    address public tokenBurnAdmin = address(0xcf04dA2562fcaC7A442AC828bAa1E75500534004);
     address public onlyCharityTeamVestingAdmin = address(0x94ffc385b64E015EEb83F1f67E71F941ea9dd25B);
 
     address public userA = address(0x6);

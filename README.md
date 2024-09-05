@@ -42,6 +42,7 @@ $ forge test
 ### Deploy
 
 ```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+$ forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_AMOY_RPC_URL
+  forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_AMOY_RPC_URL --broadcast --verify -vvvv
 ```
 

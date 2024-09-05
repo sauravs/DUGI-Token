@@ -13,10 +13,13 @@ contract DeployDugiToken is Script {
         address sushiwarpAddress = 0x4567890123456789012345678901234567890123;
         address uniswapAddress = 0x5678901234567890123456789012345678901234;
 
-        // Start broadcasting transactions
-        vm.startBroadcast();
+       uint pvtKey = vm.envUint("DEPLOYER_PVT_KEY");
+       address account = vm.addr(pvtKey);
+       console.log("deployer address on amoy = ", account);
 
-        // Deploy the DugiToken contract
+        vm.startBroadcast(pvtKey);
+
+       // Deploy the DugiToken contract
         DugiToken dugiToken = new DugiToken(
             donationAddress, liquidityPairingAddress, charityTeamAddress, sushiwarpAddress, uniswapAddress
         );
@@ -26,4 +29,3 @@ contract DeployDugiToken is Script {
     }
 }
 
-//forge script script/DeployDugiToken.s.sol --broadcast

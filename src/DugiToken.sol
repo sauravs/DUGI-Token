@@ -63,7 +63,7 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
 
     /// @notice Timestamp of the last token burn round
 
-    address public tokenBurnAdmin = 0x3793f758a36c04B51a520a59520e4d845f94F9F2;
+    address public tokenBurnAdmin = 0xcf04dA2562fcaC7A442AC828bAa1E75500534004;
     address public tokenCharityTeamVestingAdmin = 0x94ffc385b64E015EEb83F1f67E71F941ea9dd25B;
 
     /// @notice Address of the token burn admin
@@ -99,7 +99,7 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
         address _charityTeamAddress,
         address _sushiwarpAddress,
         address _uniswapAddress
-    ) ERC20("DUGI Token", "DUGI") Ownable(0x7cC26960D2A47c659A8DBeCEb0937148b0026fD6) {
+    ) ERC20("DUGI Token", "DUGI") Ownable(0x3793f758a36c04B51a520a59520e4d845f94F9F2) {
         donationAddress = _donationAddress;
         liquidityPairingAddress = _liquidityPairingAddress;
         charityTeamAddress = _charityTeamAddress;
