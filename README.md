@@ -47,6 +47,6 @@ $ forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_A
 ```
 
   ### To verify deployed contract:
-	   ```shell
-	  $ forge verify-contract <contract_address> <contract_name> --chain-id <80002> --etherscan-api-key $AMOY_POLYGONSCAN_KEY
+     ```
+	  $ forge verify-contract <contract_address> <contract_name> --chain-id <80002> --etherscan-api-key $<AMOY_POLYGONSCAN_KEY> --constructor-args <ABI_ENCODED_CONSTRUCTOR_ARGS> --watch
     ```
