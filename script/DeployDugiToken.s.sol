@@ -5,6 +5,7 @@ import {Script, console} from "forge-std/Script.sol";
 import "../src/DugiToken.sol";
 
 contract DeployDugiToken is Script {
+    
     function run() external {
         // Define the addresses for the reserves
         address donationAddress = 0x1234567890123456789012345678901234567890;

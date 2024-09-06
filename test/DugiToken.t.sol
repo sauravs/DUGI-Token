@@ -148,7 +148,7 @@ contract DugiTokenTest is Test {
 
         uint256 initialBurnReserve = dugiToken.burnLockedReserve();
         uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
-
+        
         for (uint256 i = 0; i < 420; i++) {
             // Simulate the passage of 30 days
             vm.warp(block.timestamp + 30 days);
@@ -371,5 +371,9 @@ contract DugiTokenTest is Test {
         // assert that currentReleasedSlot is equal to totalVestingSlots
 
         assertEq(dugiToken.currentReleasedSlot(), dugiToken.totalVestingSlots());
+
+        // console log totalsupply
+
+      
     }
 }

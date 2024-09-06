@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 /// @notice This contract implements an ERC20 token with specific reserves for donation, liquidity pairing, charity/tem, sushiwarp, and uniswap. It also includes mechanisms for token burning and vesting for team reserve.
 
 contract DugiToken is ERC20, Ownable, ERC20Burnable {
+    
     uint256 private constant TOTAL_SUPPLY = 21_000_000_000_000 * 10 ** 18; //// @notice Total supply of the token (21 trillion with 18 decimals)
 
     address public donationAddress;
@@ -23,21 +24,19 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
     address public uniswapAddress;
     /// @notice Address for uniswap reserve
 
-    uint256 public donationReserve = (TOTAL_SUPPLY * 5) / 100;
+    uint256 private donationReserve = (TOTAL_SUPPLY * 5) / 100;
 
     /// @notice 5% of total supply reserved for donation
-    uint256 public liquidityPairingReserve = (TOTAL_SUPPLY * 5) / 100;
+    uint256 private liquidityPairingReserve = (TOTAL_SUPPLY * 5) / 100;
     /// @notice 5% of total supply reserved for liquidity pairing
     uint256 public charityTeamReserve = (TOTAL_SUPPLY * 20) / 100;
     /// @notice 20% of total supply reserved for charity/team
-    uint256 public sushiwarpReserve = (TOTAL_SUPPLY * 20) / 100;
+    uint256 private sushiwarpReserve = (TOTAL_SUPPLY * 20) / 100;
     /// @notice 20% of total supply reserved for sushiwarp
-    uint256 public uniswapReserve = (TOTAL_SUPPLY * 20) / 100;
+    uint256 private uniswapReserve = (TOTAL_SUPPLY * 20) / 100;
     /// @notice 20% of total supply reserved for uniswap
-    uint256 public burnReserve = (TOTAL_SUPPLY * 30) / 100;
+    uint256 private burnReserve = (TOTAL_SUPPLY * 30) / 100;
     /// @notice 30% of total supply reserved for token burning
-
-    uint256 public burnCounter;
 
     /// @notice Counter to track number of burn cycle performed, every month/burn it should get increased by 1
 
@@ -45,9 +44,7 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
 
     /// @notice Locked reserve for charity team , helps tracking current charity team reserve
     uint256 public burnLockedReserve;
-    /// @notice Locked reserve for  token burning, helps tracking current burn reserve
-
-    uint256 public totalburnSlot = 421;
+   
 
     /// @notice Total Number of slots/rounds for token burning (Number of months in 35 years)
     bool public burnStarted;
@@ -68,17 +65,27 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
 
     /// @notice Address of the token burn admin
 
-    uint256 public initialLockingPeriod = 24 * 30 days;
+    uint32 public constant initialLockingPeriod = 24 * 30 days; 
 
-    /// @notice Initial locking period for charity team token reserve (24 months)
+     /// @notice Locked reserve for  token burning, helps tracking current burn reserve
 
-    uint256 public vestingPeriod = 3 * 30 days;
+    uint32 public totalburnSlot = 421;  
+
+    /// @notice Total Number of slots/rounds for token burning (Number of months in 35 years)
+
+    uint32 public burnCounter;  
+
+    
 
     /// @notice Vesting period for charity team tokens (Every 3 months after initial locking period is over)
-    uint256 public totalVestingSlots = 8;
+    uint8 public constant totalVestingSlots = 8;        
     /// @notice Number of vesting slots for charity team tokens (8 slots ,every three months ,will go on for 2 years)
 
-    uint256 public currentReleasedSlot;
+    uint8 public currentReleasedSlot;   
+
+     /// @notice Initial locking period for charity team token reserve (24 months)
+
+    uint32 public constant vestingPeriod = 3 * 30 days;  
 
     /// @notice Current Slot number for charity team tokens
     uint256 public vestingShouldStartTimestamp;
@@ -133,7 +140,7 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
     /// @notice Modifier to restrict access to only the charity/team token vesting admin
 
     modifier onlyCharityTeamVestingAdmin() {
-        require(msg.sender == tokenCharityTeamVestingAdmin, "Only charityTeamVestingAdmin allowed");
+        require(msg.sender == tokenCharityTeamVestingAdmin, "Only teamVestingAdmin allowed");
         _;
     }
 
@@ -157,7 +164,8 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
     /// @notice Function to update the token burn admin
     /// @param _tokenBurnAdmin New address of the token burn admin
 
-    function updateTokenBurnAdmin(address _tokenBurnAdmin) public onlyOwner {
+    function updateTokenBurnAdmin(address _tokenBurnAdmin) external onlyOwner {
+        require(_tokenBurnAdmin != address(0), "zero addr not allowed");
         tokenBurnAdmin = _tokenBurnAdmin;
     }
 
@@ -165,7 +173,8 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
     /// @notice Function to update the charity/team token vesting admin
     /// @param _tokenCharityTeamVestingAdmin New address of the charity/team token vesting admin
 
-    function updateTokenCharityTeamVestingAdmin(address _tokenCharityTeamVestingAdmin) public onlyOwner {
+    function updateTokenCharityTeamVestingAdmin(address _tokenCharityTeamVestingAdmin) external onlyOwner {
+        require(_tokenCharityTeamVestingAdmin != address(0), "zero addr not allowed");
         tokenCharityTeamVestingAdmin = _tokenCharityTeamVestingAdmin;
     }
 
@@ -201,7 +210,7 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
         require(currentReleasedSlot <= totalVestingSlots, "All slots have been released");
         require(
             block.timestamp >= currentVestingSlotTimestamp + vestingPeriod,
-            "current Vesting slot not over yet for next release"
+           "current cooling period not over"
         );
 
         currentVestingSlotTimestamp = block.timestamp;
@@ -213,7 +222,7 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
 
         _transfer(address(this), charityTeamAddress, amountToRelease);
 
-        if (chairtyTeamTokenInitiallyLocked == true) {
+        if (chairtyTeamTokenInitiallyLocked) {
             chairtyTeamTokenInitiallyLocked = false;
         }
     }
