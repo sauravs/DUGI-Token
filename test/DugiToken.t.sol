@@ -99,6 +99,13 @@ contract DugiTokenTest is Test {
         assertEq(dugiToken.tokenBurnAdmin(), newAdmin);
     }
 
+    function testUpdateTokenCharityTeamVestingAdmin() public {
+        address newAdmin = address(0x9);
+        vm.prank(owner);
+        dugiToken.updateTokenCharityTeamVestingAdmin(newAdmin);
+        assertEq(dugiToken.tokenCharityTeamVestingAdmin(), newAdmin);
+    }
+
     function testOnlyBurnAdminCanBurnTokens() public {
         // Simulate the passage of 30 days to meet the canBurn modifier condition
         vm.warp(block.timestamp + 30 days);
