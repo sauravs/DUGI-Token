@@ -7,14 +7,14 @@ import "../src/DugiToken.sol";
 contract DugiTokenTest is Test {
     DugiToken public dugiToken;
 
-    address public owner = address(0x3793f758a36c04B51a520a59520e4d845f94F9F2);
-    address public donationAddress = address(0x1);
-    address public liquidityPairingAddress = address(0x2);
-    address public charityTeamAddress = address(0x3);
-    address public sushiwarpAddress = address(0x4);
-    address public uniswapAddress = address(0x5);
-    address public tokenBurnAdmin = address(0xcf04dA2562fcaC7A442AC828bAa1E75500534004);
-    address public onlyCharityTeamVestingAdmin = address(0x94ffc385b64E015EEb83F1f67E71F941ea9dd25B);
+    address public owner = address(0x1e364a3634289Bc315a6DFF4e5fD018B5C6B3ef6);
+    address public donationAddress = address(0x4921B6a8Ce3eF0c443518F964f9D06763823601E);
+    address public liquidityPairingAddress = address(0x2EB4c5f243BF7F74A57F983E1bD5CF67f469c0Df);
+    address public charityTeamAddress = address(0x2fb656a60705d0D25de0A34f0b6ee0f110971A49);
+    address public operationWalletAddress = address(0xB11CDf0236b8360c17D1886fEB12400E93b3E88A);
+    address public uniswapAddress = address(0x7620B333a87102A053DBd483D57D826a3155710c);
+    address public tokenBurnAdmin = address(0xa5570A1B859401D53FB66f4aa1e250867803a408);
+    address public onlyCharityTeamVestingAdmin = address(0x50cfaA96bbb8dA3066adBeaBA4d239eEC4578CDF);
 
     address public userA = address(0x6);
     address public userB = address(0x7);
@@ -22,7 +22,7 @@ contract DugiTokenTest is Test {
 
     function setUp() public {
         dugiToken = new DugiToken(
-            donationAddress, liquidityPairingAddress, charityTeamAddress, sushiwarpAddress, uniswapAddress
+            donationAddress, liquidityPairingAddress, charityTeamAddress, operationWalletAddress, uniswapAddress
         );
     }
 
@@ -50,10 +50,11 @@ contract DugiTokenTest is Test {
         assertEq(dugiToken.balanceOf(donationAddress), (dugiToken.totalSupply() * 5) / 100);
         assertEq(dugiToken.balanceOf(liquidityPairingAddress), (dugiToken.totalSupply() * 5) / 100);
         assertEq(dugiToken.chairityTeamLockedReserve(), (dugiToken.totalSupply() * 20) / 100);
-        assertEq(dugiToken.balanceOf(sushiwarpAddress), (dugiToken.totalSupply() * 20) / 100);
+        assertEq(dugiToken.balanceOf(operationWalletAddress), (dugiToken.totalSupply() * 20) / 100);
         assertEq(dugiToken.balanceOf(uniswapAddress), (dugiToken.totalSupply() * 20) / 100);
         assertEq(dugiToken.burnLockedReserve(), (dugiToken.totalSupply() * 30) / 100);
         assertEq(dugiToken.tokenBurnAdmin(), tokenBurnAdmin);
+        assertEq(dugiToken.tokenCharityTeamVestingAdmin(), onlyCharityTeamVestingAdmin);
     }
 
     function testTransfer() public {
@@ -148,7 +149,7 @@ contract DugiTokenTest is Test {
 
         uint256 initialBurnReserve = dugiToken.burnLockedReserve();
         uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
-        
+
         for (uint256 i = 0; i < 420; i++) {
             // Simulate the passage of 30 days
             vm.warp(block.timestamp + 30 days);
@@ -373,7 +374,5 @@ contract DugiTokenTest is Test {
         assertEq(dugiToken.currentReleasedSlot(), dugiToken.totalVestingSlots());
 
         // console log totalsupply
-
-      
     }
 }

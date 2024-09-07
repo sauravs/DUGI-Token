@@ -8,116 +8,160 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 /// @title DugiToken - ERC20 Token with specific token burning reserve and in built token vesting mechanism for charity/team reserve
 /// @notice This contract implements an ERC20 token with specific reserves for donation, liquidity pairing, charity/tem, sushiwarp, and uniswap. It also includes mechanisms for token burning and vesting for team reserve.
 
+/**
+ *
+ *
+ *    DugiToken After Contract Deployment Token Allocation and Wallet Address Details:
+ *
+ * 1) Fund Reserve For Donation (donationReserve): 5% of total supply
+ *    Hold by Wallet Address: donationAddress -> 0x4921B6a8Ce3eF0c443518F964f9D06763823601E
+ *
+ * 2) Fund Reserve For Providing Liquidity to Uniswap (uniswapReserve) : 20% of total supply
+ *    Hold by Wallet Address: uniswapWalletAddress -> 0x7620B333a87102A053DBd483D57D826a3155710c
+ *
+ *
+ * 3) Fund Reserve For Operation Wallet (operationReserve) : 20% of total supply
+ *    Hold by Wallet Address: operationWallet -> 0xB11CDf0236b8360c17D1886fEB12400E93b3E88A
+ *
+ * 4) Fund Reserve For Charity/Team (charityTeamReserve): 20% of total supply
+ *    Hold by Wallet Address(after vesting cycle complete): charityTeamAddress -> 0x2fb656a60705d0D25de0A34f0b6ee0f110971A49
+ *
+ * 5) Fund Reserved to ensure sufficient liquidity for smooth trading (liquidityPairingReserve): 5% of total supply
+ *    Hold by Wallet Address(after vesting cycle complete): liquidityPairingAddress  -> 0x2EB4c5f243BF7F74A57F983E1bD5CF67f469c0Df
+ *
+ * 6) Fund Reserved for Token Burning (burnReserve) : 30% of total supply
+ *    Hold by : Dugi Token Contract
+ *
+ * 7) Dugi Token Contract Owner : 0x1e364a3634289Bc315a6DFF4e5fD018B5C6B3ef6
+ *
+ * 8) DugiTokenBurn Admin Wallet (tokenBurnAdmin) : 0xa5570A1B859401D53FB66f4aa1e250867803a408
+ *
+ * 9) DugiTokenVesting Admin Wallet(tokenCharityTeamVestingAdmin) : 0x50cfaA96bbb8dA3066adBeaBA4d239eEC4578CDF
+ *
+ *
+ *
+ */
 contract DugiToken is ERC20, Ownable, ERC20Burnable {
+
+    //// @notice Total supply of the token (21 trillion with 18 decimals)
+    uint256 private constant TOTAL_SUPPLY = 21_000_000_000_000 * 10 ** 18; 
     
-    uint256 private constant TOTAL_SUPPLY = 21_000_000_000_000 * 10 ** 18; //// @notice Total supply of the token (21 trillion with 18 decimals)
-
-    address public donationAddress;
-
     /// @notice Address for donation reserve
-    address public liquidityPairingAddress;
-    /// @notice Address for liquidity pairing reserve
-    address public charityTeamAddress;
-    /// @notice Address for charity team reserve
-    address public sushiwarpAddress;
-    /// @notice Address for sushiwarp reserve
-    address public uniswapAddress;
-    /// @notice Address for uniswap reserve
-
+    address public donationAddress;                
+   
+    /// @notice Wallet address reserved reserved to ensure sufficient liquidity for smooth trading
+    address public liquidityPairingAddress;      
+    
+    /// @notice Wallet Address for charity/team reserve
+    address public charityTeamAddress;           
+    
+     /// @notice Wallet Address for operation reserve
+    address public operationWallet;             
+    
+    /// @notice Wallet Address for uniswap reserve
+    address public uniswapWalletAddress;        
+   
+    
+    /// @notice 5% of total supply reserved for donation
     uint256 private donationReserve = (TOTAL_SUPPLY * 5) / 100;
 
-    /// @notice 5% of total supply reserved for donation
-    uint256 private liquidityPairingReserve = (TOTAL_SUPPLY * 5) / 100;
-    /// @notice 5% of total supply reserved for liquidity pairing
-    uint256 public charityTeamReserve = (TOTAL_SUPPLY * 20) / 100;
-    /// @notice 20% of total supply reserved for charity/team
-    uint256 private sushiwarpReserve = (TOTAL_SUPPLY * 20) / 100;
-    /// @notice 20% of total supply reserved for sushiwarp
-    uint256 private uniswapReserve = (TOTAL_SUPPLY * 20) / 100;
-    /// @notice 20% of total supply reserved for uniswap
-    uint256 private burnReserve = (TOTAL_SUPPLY * 30) / 100;
-    /// @notice 30% of total supply reserved for token burning
+    /// @notice 5% of total supply reserved to ensure sufficient liquidity for smooth trading
 
-    /// @notice Counter to track number of burn cycle performed, every month/burn it should get increased by 1
+    uint256 private liquidityPairingReserve = (TOTAL_SUPPLY * 5) / 100;
+   
+
+     /// @notice 20% of total supply reserved for charity/team
+    uint256 public charityTeamReserve = (TOTAL_SUPPLY * 20) / 100;
+  
+
+    /// @notice 20% of total supply reserved for operationReserve
+    uint256 private operationReserve = (TOTAL_SUPPLY * 20) / 100;
+  
+     /// @notice 20% of total supply reserved for providing liquidity to uniswap
+    uint256 private uniswapReserve = (TOTAL_SUPPLY * 20) / 100;
+   
+     /// @notice 30% of total supply reserved for token burning
+    uint256 private burnReserve = (TOTAL_SUPPLY * 30) / 100;
+  
+
+     /// @notice Locked reserve for charity team , helps tracking current charity/team reserve
 
     uint256 public chairityTeamLockedReserve;
 
-    /// @notice Locked reserve for charity team , helps tracking current charity team reserve
+    /// @notice Locked reserve for token burning, helps tracking current burn reserve
     uint256 public burnLockedReserve;
-   
-
-    /// @notice Total Number of slots/rounds for token burning (Number of months in 35 years)
+    
+    /// @notice Indicates if burning  cyclehas started
     bool public burnStarted;
-    /// @notice Indicates if burning has started
+    
+    /// @notice Indicates if burning cycle has ended
     bool public burnEnded;
-    /// @notice Indicates if burning has ended
-
-    bool public chairtyTeamTokenInitiallyLocked;
 
     /// @notice Indicates if charity team tokens are yet locked initially
 
-    uint256 public lastBurnTimestamp;
+    bool public chairtyTeamTokenInitiallyLocked;
 
     /// @notice Timestamp of the last token burn round
 
-    address public tokenBurnAdmin = 0xcf04dA2562fcaC7A442AC828bAa1E75500534004;
-    address public tokenCharityTeamVestingAdmin = 0x94ffc385b64E015EEb83F1f67E71F941ea9dd25B;
+    uint256 public lastBurnTimestamp;
 
-    /// @notice Address of the token burn admin
+    /// @notice Address of the token burn admin who can burn tokens
+    address public tokenBurnAdmin = 0xa5570A1B859401D53FB66f4aa1e250867803a408;
 
-    uint32 public constant initialLockingPeriod = 24 * 30 days; 
-
-     /// @notice Locked reserve for  token burning, helps tracking current burn reserve
-
-    uint32 public totalburnSlot = 421;  
-
-    /// @notice Total Number of slots/rounds for token burning (Number of months in 35 years)
-
-    uint32 public burnCounter;  
+    /// @notice Address of the charity/team token vesting admin who can release charity/team tokens
+    address public tokenCharityTeamVestingAdmin = 0x50cfaA96bbb8dA3066adBeaBA4d239eEC4578CDF;
 
     
+    /// @notice Initial locking period  before tokenVesting starts (24 months)
+    uint32 public constant initialLockingPeriod = 24 * 30 days;
 
-    /// @notice Vesting period for charity team tokens (Every 3 months after initial locking period is over)
-    uint8 public constant totalVestingSlots = 8;        
+        /// @notice Total Number of slots/rounds for token burning (Number of months in 35 years + 1 month to burn residue tokens)
+
+    uint32 public totalburnSlot = 421;
+
+    /// @notice Counter to keep track of the number of token burn rounds
+    uint32 public burnCounter;
+
     /// @notice Number of vesting slots for charity team tokens (8 slots ,every three months ,will go on for 2 years)
+    uint8 public constant totalVestingSlots = 8;
+ 
+    /// @notice Counter to keep track of current released slot for charity team tokens
+    uint8 public currentReleasedSlot;
 
-    uint8 public currentReleasedSlot;   
+    /// @notice Vesting period for charity team tokens after intial locking period over (3 months)
+    uint32 public constant vestingPeriod = 3 * 30 days;
 
-     /// @notice Initial locking period for charity team token reserve (24 months)
-
-    uint32 public constant vestingPeriod = 3 * 30 days;  
-
-    /// @notice Current Slot number for charity team tokens
-    uint256 public vestingShouldStartTimestamp;
     /// @notice Timestamp when vesting should start ,after intial locking period is over
-    uint256 public currentVestingSlotTimestamp;
+    uint256 public vestingShouldStartTimestamp;
+
     /// @notice helps keeps Timestamp record  for the upcoming slot
+    uint256 public currentVestingSlotTimestamp;
 
     /// @notice Constructor to initialize the DugiToken contract
-    /// @param _donationAddress Address for donation reserve
-    /// @param _liquidityPairingAddress Address for liquidity pairing reserve
-    /// @param _charityTeamAddress Address for charity team reserve
-    /// @param _sushiwarpAddress Address for sushiwarp reserve
-    /// @param _uniswapAddress Address for uniswap reserve
+    /// @param _donationAddress Address for donation reserve Wallet
+    /// @param _liquidityPairingAddress Address for liquidity pairing reserve Wallet
+    /// @param _charityTeamAddress Address for charity team reserve Wallet
+    /// @param _operationWallet Address for operation reserve Wallet
+    /// @param _uniswapWalletAddress Address for uniswap reserve Wallet
 
     constructor(
         address _donationAddress,
         address _liquidityPairingAddress,
         address _charityTeamAddress,
-        address _sushiwarpAddress,
-        address _uniswapAddress
-    ) ERC20("DUGI Token", "DUGI") Ownable(0x3793f758a36c04B51a520a59520e4d845f94F9F2) {
+        address _operationWallet,
+        address _uniswapWalletAddress
+    ) ERC20("DUGI Token", "DUGI") Ownable(0x1e364a3634289Bc315a6DFF4e5fD018B5C6B3ef6) {
         donationAddress = _donationAddress;
         liquidityPairingAddress = _liquidityPairingAddress;
         charityTeamAddress = _charityTeamAddress;
-        sushiwarpAddress = _sushiwarpAddress;
-        uniswapAddress = _uniswapAddress;
+        operationWallet = _operationWallet;
+        uniswapWalletAddress = _uniswapWalletAddress;
 
         _mint(donationAddress, donationReserve);
         _mint(liquidityPairingAddress, liquidityPairingReserve);
         _mint(address(this), charityTeamReserve);
-        _mint(sushiwarpAddress, sushiwarpReserve);
-        _mint(uniswapAddress, uniswapReserve);
+        _mint(operationWallet, operationReserve);
+        _mint(uniswapWalletAddress, uniswapReserve);
         _mint(address(this), burnReserve);
 
         chairityTeamLockedReserve = charityTeamReserve;
@@ -135,7 +179,6 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
         require(msg.sender == tokenBurnAdmin, "Only tokenBurnAdmin allowed");
         _;
     }
-
 
     /// @notice Modifier to restrict access to only the charity/team token vesting admin
 
@@ -168,7 +211,6 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
         require(_tokenBurnAdmin != address(0), "zero addr not allowed");
         tokenBurnAdmin = _tokenBurnAdmin;
     }
-
 
     /// @notice Function to update the charity/team token vesting admin
     /// @param _tokenCharityTeamVestingAdmin New address of the charity/team token vesting admin
@@ -208,10 +250,7 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
     function releaseTeamTokens() external onlyCharityTeamVestingAdmin unlockChairtyTeamToken {
         require(chairityTeamLockedReserve >= 0, "Charity team reserve is empty");
         require(currentReleasedSlot <= totalVestingSlots, "All slots have been released");
-        require(
-            block.timestamp >= currentVestingSlotTimestamp + vestingPeriod,
-           "current cooling period not over"
-        );
+        require(block.timestamp >= currentVestingSlotTimestamp + vestingPeriod, "current cooling period not over");
 
         currentVestingSlotTimestamp = block.timestamp;
 

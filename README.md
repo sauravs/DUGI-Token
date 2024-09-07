@@ -44,9 +44,14 @@ $ forge test
 ```shell
 $ forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_AMOY_RPC_URL
 $ forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_AMOY_RPC_URL --broadcast --verify -vvvv
+
+$ forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_MAINNET_RPC_URL
+$ forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_MAINNET_RPC_URL --broadcast -vvvv
 ```
 
   ### To verify deployed contract:
      ```
 	  $ forge verify-contract <contract_address> <contract_name> --chain-id <80002> --etherscan-api-key $<AMOY_POLYGONSCAN_KEY> --constructor-args <ABI_ENCODED_CONSTRUCTOR_ARGS> --watch
+
+    forge verify-contract <contract_address> <contract_name> --chain-id <80002> --etherscan-api-key $<AMOY_POLYGONSCAN_KEY> --constructor-args <ABI_ENCODED_CONSTRUCTOR_ARGS> --watch
     ```
