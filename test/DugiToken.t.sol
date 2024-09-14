@@ -151,36 +151,122 @@ contract DugiTokenTest is Test {
         dugiToken.burnTokens();
     }
 
-    function testBurnTokensMultipleTimes() public {
-        // as per calculation it should iterate for 420 times/420 months to burn all the tokens from burnReserve
+    // function testBurnTokensMultipleTimes() public {
+    //     // as per calculation it should iterate for 421 times/421 months to burn all the tokens from burnReserve
 
-        uint256 initialBurnReserve = dugiToken.burnLockedReserve();
-        uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
+    //     uint256 initialBurnReserve = dugiToken.burnLockedReserve();
+    //     uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
 
-        for (uint256 i = 0; i < 420; i++) {
-            // Simulate the passage of 30 days
-            vm.warp(block.timestamp + 30 days);
+    //     for (uint256 i = 0; i < 420; i++) {
+    //         // Simulate the passage of 30 days
+    //         vm.warp(block.timestamp + 30 days);
 
-            vm.prank(tokenBurnAdmin);
+    //         vm.prank(tokenBurnAdmin);
 
-            dugiToken.burnTokens();
+    //         dugiToken.burnTokens();
 
-            uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
-            assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
-            assertEq(dugiToken.burnCounter(), i + 1);
-            assertEq(dugiToken.burnStarted(), true);
-        }
+    //         uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
+    //         assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
+    //             // Test total supply after token burn
+       
+    //  uint256 expectedTotalSupply = dugiToken.totalSupply() - burnAmount * (i + 1);
+    //     assertEq(dugiToken.totalSupply(), expectedTotalSupply);
+    //         assertEq(dugiToken.burnCounter(), i + 1);
+    //         assertEq(dugiToken.burnStarted(), true);
+    //     }
 
-        // Final burn
+    //     // Final burn
+    //     vm.warp(block.timestamp + 30 days);
+    //     vm.prank(tokenBurnAdmin);
+    //     dugiToken.burnTokens();
+
+    //     // Assert that burnCounter is equal to totalburnSlot
+    //     assertEq(dugiToken.burnCounter(), dugiToken.totalburnSlot());
+    //     assertEq(dugiToken.burnEnded(), true);
+    //     assertEq(dugiToken.burnLockedReserve(), 0);
+    // }
+
+
+//     function testBurnTokensMultipleTimes() public {
+//     // As per calculation, it should iterate for 421 times/421 months to burn all the tokens from burnReserve
+//     uint256 initialBurnReserve = dugiToken.burnLockedReserve();
+//     uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
+//     uint256 initialTotalSupply = dugiToken.totalSupply();
+
+//     for (uint256 i = 0; i < 420; i++) {
+//         // Simulate the passage of 30 days
+//         vm.warp(block.timestamp + 30 days);
+
+//         vm.prank(tokenBurnAdmin);
+
+//         dugiToken.burnTokens();
+
+//         uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
+//         assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
+        
+//         // Test total supply after token burn
+//         uint256 expectedTotalSupply = initialTotalSupply - burnAmount * (i + 1);
+//         assertEq(dugiToken.totalSupply(), expectedTotalSupply);
+        
+//         assertEq(dugiToken.burnCounter(), i + 1);
+//         assertEq(dugiToken.burnStarted(), true);
+//     }
+
+//     // Final burn
+//     vm.warp(block.timestamp + 30 days);
+//     vm.prank(tokenBurnAdmin);
+//     dugiToken.burnTokens();
+
+//     // Assert that burnCounter is equal to totalburnSlot
+//     assertEq(dugiToken.burnCounter(), dugiToken.totalburnSlot());
+//     assertEq(dugiToken.burnEnded(), true);
+//     assertEq(dugiToken.burnLockedReserve(), 0);
+//     // assert that total supply is 21 trillion - 30% of 21 trillion
+
+//     assertEq(dugiToken.totalSupply(), 21_000_000_000_000 * 70 / 100);
+
+// }
+
+
+function testBurnTokensMultipleTimes() public {
+    // As per calculation, it should iterate for 421 times/421 months to burn all the tokens from burnReserve
+    uint256 initialBurnReserve = dugiToken.burnLockedReserve();
+    uint256 burnAmount = (dugiToken.totalSupply() * 714) / 1_000_000;
+    uint256 initialTotalSupply = dugiToken.totalSupply();
+
+    for (uint256 i = 0; i < 420; i++) {
+        // Simulate the passage of 30 days
         vm.warp(block.timestamp + 30 days);
+
         vm.prank(tokenBurnAdmin);
+
         dugiToken.burnTokens();
 
-        // Assert that burnCounter is equal to totalburnSlot
-        assertEq(dugiToken.burnCounter(), dugiToken.totalburnSlot());
-        assertEq(dugiToken.burnEnded(), true);
-        assertEq(dugiToken.burnLockedReserve(), 0);
+        uint256 newBurnReserve = dugiToken.balanceOf(address(dugiToken)) - dugiToken.chairityTeamLockedReserve();
+        assertEq(newBurnReserve, initialBurnReserve - burnAmount * (i + 1));
+        
+        // Test total supply after token burn
+        uint256 expectedTotalSupply = initialTotalSupply - burnAmount * (i + 1);
+        assertEq(dugiToken.totalSupply(), expectedTotalSupply);
+        
+        assertEq(dugiToken.burnCounter(), i + 1);
+        assertEq(dugiToken.burnStarted(), true);
     }
+
+    // Final burn
+    vm.warp(block.timestamp + 30 days);
+    vm.prank(tokenBurnAdmin);
+    dugiToken.burnTokens();
+
+    // Assert that burnCounter is equal to totalburnSlot
+    assertEq(dugiToken.burnCounter(), dugiToken.totalburnSlot());
+    assertEq(dugiToken.burnEnded(), true);
+    assertEq(dugiToken.burnLockedReserve(), 0);
+    
+    // Assert that total supply is 21 trillion - 30% of 21 trillion
+    uint256 expectedFinalTotalSupply = 21_000_000_000_000 * 70 / 100 * 10**18;
+    assertEq(dugiToken.totalSupply(), expectedFinalTotalSupply);
+}
 
     function testInitialLockingPeriod() public {
         vm.prank(onlyCharityTeamVestingAdmin);

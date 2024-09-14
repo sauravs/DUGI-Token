@@ -8,13 +8,13 @@ contract DeployDugiToken is Script {
     function run() external {
         // Define the wallet addresses for the reserves
         
-        address donationAddress = 0x4921B6a8Ce3eF0c443518F964f9D06763823601E;       // christain
-        address uniswapAddress = 0x7620B333a87102A053DBd483D57D826a3155710c;        // christain
-        address operationWallet = 0xB11CDf0236b8360c17D1886fEB12400E93b3E88A;       // christain
+        address donationAddress = 0x4921B6a8Ce3eF0c443518F964f9D06763823601E;      
+        address uniswapAddress = 0x7620B333a87102A053DBd483D57D826a3155710c;       
+        address operationWallet = 0xB11CDf0236b8360c17D1886fEB12400E93b3E88A;       
 
 
-        address liquidityPairingAddress = 0x2EB4c5f243BF7F74A57F983E1bD5CF67f469c0Df;  //christian
-        address charityTeamAddress = 0x2fb656a60705d0D25de0A34f0b6ee0f110971A49;       // christian
+        address liquidityPairingAddress = 0x2EB4c5f243BF7F74A57F983E1bD5CF67f469c0Df;  
+        address charityTeamAddress = 0x2fb656a60705d0D25de0A34f0b6ee0f110971A49;      
 
 
 

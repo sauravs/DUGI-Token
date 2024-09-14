@@ -55,9 +55,6 @@ $ forge script script/DeployDugiToken.s.sol:DeployDugiToken --rpc-url $POLYGON_M
 
     forge verify-contract <contract_address> <contract_name> --chain-id <80002> --etherscan-api-key $<AMOY_POLYGONSCAN_KEY> --constructor-args <ABI_ENCODED_CONSTRUCTOR_ARGS> --watch
     ```
-// demodugi contract address on mainnet : 0xed1213DBe11dA1EE46F7C51e869e449A2Dd8844F
-
-
 
 
 
