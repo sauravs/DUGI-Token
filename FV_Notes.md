@@ -1,8 +1,11 @@
 
 
 
+//  forge test --match-path test/formal-verification/Halmos.t.sol
 
 //  certoraRun ./test/formal-verification/Certora/conf/FVDugiToken.conf
+
+// halmos --function checktotalSupplyShouldNeverBeZero
 
 
 
