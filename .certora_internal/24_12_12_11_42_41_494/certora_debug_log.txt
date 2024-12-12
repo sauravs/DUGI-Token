@@ -1,0 +1,19 @@
+Saving last configuration file to .certora_internal/24_12_12_11_42_41_494/run.conf
+There is no TAC file. Going to script EVMVerifier/certoraBuild.py to main_with_args()
+Creating dir /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/.certora_internal/24_12_12_11_42_41_494/.certora_config
+In /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/test/formal-verification/Certora/spec/FVDugiToken.spec, found the imports: []
+copying spec file /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/test/formal-verification/Certora/spec/FVDugiToken.spec to /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/.certora_internal/24_12_12_11_42_41_494/.certora_sources/.0_FVDugiToken.spec.spec
+writing /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/.certora_internal/24_12_12_11_42_41_494/.certora_verify.json
+running ['java', '-jar', '/root/.local/pipx/venvs/certora-cli/lib/python3.8/site-packages/certora_jars/Typechecker.jar', '-buildDirectory', '/mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/.certora_internal/24_12_12_11_42_41_494', '-assumeUnwindCond', '-ruleSanityChecks', 'basic']
+
+building file src/DugiToken.sol
+Running cmd solc --version
+stdout, stderr = .certora_internal/24_12_12_11_42_41_494/.certora_config/version_check_solc.stdout, .certora_internal/24_12_12_11_42_41_494/.certora_config/version_check_solc.stderr
+Exitcode 0
+Solc run solc --version time: 0.1969
+Running cmd solc -o ".certora_internal/24_12_12_11_42_41_494/.certora_config/DugiToken.sol_0/" --overwrite --allow-paths ".",. --standard-json
+stdout, stderr = .certora_internal/24_12_12_11_42_41_494/.certora_config/DugiToken.sol_0.standard.stdout.json, .certora_internal/24_12_12_11_42_41_494/.certora_config/DugiToken.sol_0.standard.stderr.json
+Exitcode 0
+Solc run solc -o ".certora_internal/24_12_12_11_42_41_494/.certora_config/DugiToken.sol_0/" --overwrite --allow-paths ".",. --standard-json time: 0.415
+reading standard json data from .certora_internal/24_12_12_11_42_41_494/.certora_config/DugiToken.sol_0.standard.stdout.json
+build failed

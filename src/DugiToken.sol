@@ -42,58 +42,53 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
  *
  */
 contract DugiToken is ERC20, Ownable, ERC20Burnable {
-
     //// @notice Total supply of the token (21 trillion with 18 decimals)
-    uint256 private constant TOTAL_SUPPLY = 21_000_000_000_000 * 10 ** 18; 
-    
+    uint256 private constant TOTAL_SUPPLY = 21_000_000_000_000 * 10 ** 18;
+
     /// @notice Address for donation reserve
-    address public donationAddress;                
-   
+    address public donationAddress;
+
     /// @notice Wallet address reserved reserved to ensure sufficient liquidity for smooth trading
-    address public liquidityPairingAddress;      
-    
+    address public liquidityPairingAddress;
+
     /// @notice Wallet Address for charity/team reserve
-    address public charityTeamAddress;           
-    
-     /// @notice Wallet Address for operation reserve
-    address public operationWallet;             
-    
+    address public charityTeamAddress;
+
+    /// @notice Wallet Address for operation reserve
+    address public operationWallet;
+
     /// @notice Wallet Address for uniswap reserve
-    address public uniswapWalletAddress;        
-   
-    
+    address public uniswapWalletAddress;
+
     /// @notice 5% of total supply reserved for donation
     uint256 private donationReserve = (TOTAL_SUPPLY * 5) / 100;
 
     /// @notice 5% of total supply reserved to ensure sufficient liquidity for smooth trading
 
     uint256 private liquidityPairingReserve = (TOTAL_SUPPLY * 5) / 100;
-   
 
-     /// @notice 20% of total supply reserved for charity/team
+    /// @notice 20% of total supply reserved for charity/team
     uint256 public charityTeamReserve = (TOTAL_SUPPLY * 20) / 100;
-  
 
     /// @notice 20% of total supply reserved for operationReserve
     uint256 private operationReserve = (TOTAL_SUPPLY * 20) / 100;
-  
-     /// @notice 20% of total supply reserved for providing liquidity to uniswap
-    uint256 private uniswapReserve = (TOTAL_SUPPLY * 20) / 100;
-   
-     /// @notice 30% of total supply reserved for token burning
-    uint256 private burnReserve = (TOTAL_SUPPLY * 30) / 100;
-  
 
-     /// @notice Locked reserve for charity team , helps tracking current charity/team reserve
+    /// @notice 20% of total supply reserved for providing liquidity to uniswap
+    uint256 private uniswapReserve = (TOTAL_SUPPLY * 20) / 100;
+
+    /// @notice 30% of total supply reserved for token burning
+    uint256 private burnReserve = (TOTAL_SUPPLY * 30) / 100;
+
+    /// @notice Locked reserve for charity team , helps tracking current charity/team reserve
 
     uint256 public chairityTeamLockedReserve;
 
     /// @notice Locked reserve for token burning, helps tracking current burn reserve
     uint256 public burnLockedReserve;
-    
+
     /// @notice Indicates if burning  cyclehas started
     bool public burnStarted;
-    
+
     /// @notice Indicates if burning cycle has ended
     bool public burnEnded;
 
@@ -111,11 +106,10 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
     /// @notice Address of the charity/team token vesting admin who can release charity/team tokens
     address public tokenCharityTeamVestingAdmin = 0x50cfaA96bbb8dA3066adBeaBA4d239eEC4578CDF;
 
-    
     /// @notice Initial locking period  before tokenVesting starts (24 months)
     uint32 public constant initialLockingPeriod = 24 * 30 days;
 
-        /// @notice Total Number of slots/rounds for token burning (Number of months in 35 years + 1 month to burn residue tokens)
+    /// @notice Total Number of slots/rounds for token burning (Number of months in 35 years + 1 month to burn residue tokens)
 
     uint32 public totalburnSlot = 421;
 
@@ -124,7 +118,7 @@ contract DugiToken is ERC20, Ownable, ERC20Burnable {
 
     /// @notice Number of vesting slots for charity team tokens (8 slots ,every three months ,will go on for 2 years)
     uint8 public constant totalVestingSlots = 8;
- 
+
     /// @notice Counter to keep track of current released slot for charity team tokens
     uint8 public currentReleasedSlot;
 

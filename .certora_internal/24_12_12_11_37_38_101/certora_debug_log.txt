@@ -1,0 +1,8 @@
+Saving last configuration file to .certora_internal/24_12_12_11_37_38_101/run.conf
+There is no TAC file. Going to script EVMVerifier/certoraBuild.py to main_with_args()
+Creating dir /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/.certora_internal/24_12_12_11_37_38_101/.certora_config
+In /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/test/formal-verification/Certora/spec/FVDugiToken.spec, found the imports: []
+copying spec file /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/test/formal-verification/Certora/spec/FVDugiToken.spec to /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/.certora_internal/24_12_12_11_37_38_101/.certora_sources/.0_FVDugiToken.spec.spec
+writing /mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/.certora_internal/24_12_12_11_37_38_101/.certora_verify.json
+`java` is not installed. Installing Java version 11 or later will enable faster CVL specification syntax checking before uploading to the cloud.
+build failed

@@ -1,0 +1,30 @@
+{
+    "CLI_package_name": "certora-cli",
+    "CLI_version": "7.20.3",
+    "branch": "main",
+    "certora_ci_client": null,
+    "conf": {
+        "files": [
+            "./src/DugiToken.sol"
+        ],
+        "msg": "Verification of FormalVerificationCatches",
+        "optimistic_loop": true,
+        "process": "emv",
+        "rule_sanity": "basic",
+        "verify": "DugiToken:./test/formal-verification/Certora/spec/FVDugiToken.spec",
+        "wait_for_results": "all"
+    },
+    "conf_path": "FVDugiToken.conf",
+    "cwd_relative": ".",
+    "dirty": true,
+    "group_id": null,
+    "main_spec": "./test/formal-verification/Certora/spec/FVDugiToken.spec",
+    "origin": "https://github.com/sauravs/DUGI-Token.git",
+    "python_version": "3.8.10",
+    "raw_args": [
+        "/root/.local/bin/certoraRun",
+        "./test/formal-verification/Certora/conf/FVDugiToken.conf"
+    ],
+    "revision": "33cf0b823fcd8754cc08f82dcaa82c6ea5650549",
+    "timestamp": "1733963875.863084"
+}

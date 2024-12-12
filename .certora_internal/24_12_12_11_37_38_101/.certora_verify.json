@@ -1,0 +1,8 @@
+{
+    "importFilesToOrigRelpaths": {},
+    "primary_contract": "DugiToken",
+    "specfile": "/mnt/d/wsl/web3tech/clients/christian/Dugi_Tokens/test/formal-verification/Certora/spec/FVDugiToken.spec",
+    "specfileOrigRelpath": "test/formal-verification/Certora/spec/FVDugiToken.spec",
+    "specfilesToImportDecls": {},
+    "type": "spec"
+}
